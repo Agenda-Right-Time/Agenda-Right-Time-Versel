@@ -1,12 +1,13 @@
-import LandingPage from "./LandingPage";
+import TestePage from "./TestePage";
 import DebugInfo from "@/components/DebugInfo";
 
-// Página inicial redireciona para a landing page
+// Página inicial - TESTE SIMPLES
 const Index = () => {
+  console.log('🚀 Index renderizada');
+  
   return (
     <>
-      <DebugInfo />
-      <LandingPage />
+      <TestePage />
     </>
   );
 };
