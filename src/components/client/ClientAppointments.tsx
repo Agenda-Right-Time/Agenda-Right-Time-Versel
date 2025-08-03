@@ -68,11 +68,9 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
       if (agendamentos.length === 0) {
         setLoading(true);
       }
-      console.log('🔍 Buscando agendamentos para:', clientProfile?.email || 'sem email', 'owner:', ownerId);
 
       // Se não tem perfil de cliente ou é um ID inválido, não carregar dados
       if (!isValidUUID(ownerId)) {
-        console.log('📋 ID inválido:', ownerId);
         setAgendamentos([]);
         setLoading(false);
         return;
@@ -81,7 +79,6 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
       // Buscar pelo perfil de cliente OU pelo ID do usuário se não tiver perfil
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('📋 Usuário não autenticado');
         setAgendamentos([]);
         setLoading(false);
         return;
@@ -279,8 +276,6 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !ownerId || !mounted) return;
 
-      console.log('🔄 Configurando listener real-time para agendamentos');
-      
       channel = supabase
         .channel('client-agendamentos-unified')
         .on(
@@ -292,7 +287,6 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
             filter: `user_id=eq.${ownerId}`
           },
           (payload) => {
-            console.log('🔄 Mudança em agendamento detectada:', payload);
             if (mounted) {
               // Debounce para evitar múltiplas chamadas
               setTimeout(() => {
@@ -309,7 +303,6 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
             table: 'pagamentos'
           },
           (payload) => {
-            console.log('🔄 Mudança em pagamento detectada:', payload);
             if (mounted) {
               // Debounce para evitar múltiplas chamadas
               setTimeout(() => {
@@ -324,7 +317,6 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
     // Handler para quando a página fica visível novamente
     const handleVisibilityChange = () => {
       if (!document.hidden && mounted) {
-        console.log('🔄 Página visível novamente, atualizando agendamentos...');
         fetchAgendamentos();
       }
     };
@@ -332,7 +324,6 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
     // Verificar se veio de redirect de pagamento
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('tab') === 'meus-agendamentos') {
-      console.log('🔄 Redirecionado para agendamentos, carregando dados...');
     }
 
     // Inicializar
@@ -343,7 +334,6 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
     // Cleanup
     return () => {
       mounted = false;
-      console.log('🔌 Removendo listeners');
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (channel) {
         supabase.removeChannel(channel);
