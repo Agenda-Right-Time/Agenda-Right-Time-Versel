@@ -238,12 +238,17 @@ const AppointmentsManager = () => {
           let valorPago = appointment.valor_pago || 0;
           
           // Determinar status baseado nos pagamentos do pacote completo
-          // IMPORTANTE: Não sobrescrever status "concluido"
+          // IMPORTANTE: Respeitar status individuais já definidos (concluido, cancelado)
           if (appointment.status === 'concluido') {
             displayStatus = 'concluido';
             realStatus = 'concluido';
             valorPago = appointment.valor; // 100% pago se concluído
+          } else if (appointment.status === 'cancelado') {
+            displayStatus = 'cancelado';
+            realStatus = 'cancelado';
+            valorPago = 0; // 0% pago se cancelado
           } else if (hasPaidPayment || appointment.status === 'confirmado') {
+            // Só alterar para confirmado se ainda não tem status específico
             displayStatus = 'agendado';
             realStatus = 'confirmado';
             valorPago = appointment.valor; // 100% pago se confirmado
@@ -251,10 +256,6 @@ const AppointmentsManager = () => {
             displayStatus = 'pendente';
             realStatus = 'pendente';
             valorPago = 0; // 0% pago se pendente
-          } else if (appointment.status === 'cancelado') {
-            displayStatus = 'cancelado';
-            realStatus = 'cancelado';
-            valorPago = 0; // 0% pago se cancelado
           }
           
           return {
