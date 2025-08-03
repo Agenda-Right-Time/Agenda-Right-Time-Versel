@@ -166,32 +166,15 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
       const agendamentosProcessados: Agendamento[] = [];
       const pacotesProcessados = new Set<string>();
 
-      for (const agendamento of normalData || []) {
-        const observacoes = agendamento.observacoes || '';
-        const isPacoteMensal = observacoes.includes('PACOTE MENSAL');
-        
-        // DEBUG: Verificar se pacote mensal aparece no loop
-        if (isPacoteMensal) {
-          console.log('🔍 PACOTE MENSAL ENCONTRADO NO LOOP:', {
-            id: agendamento.id,
-            status: agendamento.status,
-            observacoes: observacoes.substring(0, 50)
-          });
-        }
-        
-        if (isPacoteMensal) {
-          // Extrair ID do pacote das observações
-          const pacoteMatch = observacoes.match(/PACOTE MENSAL (PMT\d+)/);
-          const pacoteId = pacoteMatch ? pacoteMatch[1] : '';
-          const sequenciaMatch = observacoes.match(/Sessão (\d+)\/4/);
-          const sequencia = sequenciaMatch ? parseInt(sequenciaMatch[1]) : 1;
+      // CORREÇÃO: Processar todos os pacotes encontrados, mesmo que o representante não esteja em normalData
+      for (const [pacoteId, agendamentosPacote] of pacotesEncontrados) {
+        if (!pacotesProcessados.has(pacoteId)) {
+          pacotesProcessados.add(pacoteId);
 
-          // Se é qualquer sessão do pacote e ainda não foi processado
-          if (pacoteId && !pacotesProcessados.has(pacoteId)) {
-            pacotesProcessados.add(pacoteId);
-
-            const agendamentosPacote = pacotesEncontrados.get(pacoteId) || [];
-
+          // Usar qualquer agendamento do pacote como representante (preferencialmente o primeiro ativo)
+          const representante = agendamentosPacote.find(a => a.status !== 'cancelado' && a.status !== 'concluido') || agendamentosPacote[0];
+          
+          if (representante) {
             // Contar sessões por status
             const sessoesCanceladas = agendamentosPacote.filter(a => a.status === 'cancelado').length;
             const sessoesConcluidas = agendamentosPacote.filter(a => a.status === 'concluido').length;
@@ -199,58 +182,37 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
               a.status !== 'cancelado' && a.status !== 'concluido'
             ).length;
             
-                          // Mostrar o pacote se há pelo menos uma sessão ativa OU se há sessões canceladas/concluídas para mostrar na dashboard
-              if (sessoesPendentes > 0 || sessoesCanceladas > 0 || sessoesConcluidas > 0) {
-                const valorTotal = agendamentosPacote.reduce((total, a) => total + (a.valor || 0), 0);
-                
-                // Filtrar sessões ativas para verificação e exibição
-                const sessoesAtivas = agendamentosPacote.filter(a => 
-                  a.status !== 'cancelado' && a.status !== 'concluido'
-                );
-                
-                // LÓGICA CORRETA: Se há pagamento pago em QUALQUER sessão, pacote está confirmado
-                // Não importa o status individual das sessões, se foi pago, está confirmado
-                const todasAsSessoes = agendamentosPacote;
-                
-                // DEBUG: Verificar pagamentos de cada sessão
-                console.log('💰 VERIFICANDO PAGAMENTOS DO PACOTE:', {
-                  pacoteId,
-                  sessoes: todasAsSessoes.map(s => ({
-                    id: s.id,
-                    status: s.status,
-                    pagamentos: s.pagamentos?.map((p: any) => ({ status: p.status, valor: p.valor })) || 'SEM PAGAMENTOS'
-                  }))
-                });
-                
-                const temPagamentoPago = todasAsSessoes.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
-                
-                let pacoteStatus = 'agendado';
-                
-                if (temPagamentoPago) {
-                  // Se qualquer sessão tem pagamento pago, pacote está confirmado
-                  pacoteStatus = 'confirmado';
-                } else {
-                  // Só verificar pagamentos pendentes se não há pagamento pago
-                  const hasPendingPayment = todasAsSessoes.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
-                  
-                  if (hasPendingPayment) {
-                    pacoteStatus = 'pendente';
-                  }
+            // Mostrar o pacote se há pelo menos uma sessão ativa OU se há sessões canceladas/concluídas para mostrar na dashboard
+            if (sessoesPendentes > 0 || sessoesCanceladas > 0 || sessoesConcluidas > 0) {
+              const valorTotal = agendamentosPacote.reduce((total, a) => total + (a.valor || 0), 0);
+              
+              // LÓGICA CORRETA: Se há pagamento pago em QUALQUER sessão, pacote está confirmado
+              const temPagamentoPago = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
+              
+              let pacoteStatus = 'agendado';
+              
+              if (temPagamentoPago) {
+                pacoteStatus = 'confirmado';
+              } else {
+                const hasPendingPayment = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
+                if (hasPendingPayment) {
+                  pacoteStatus = 'pendente';
                 }
+              }
 
               agendamentosProcessados.push({
-                id: agendamento.id,
-                data_hora: agendamento.data_hora,
+                id: representante.id,
+                data_hora: representante.data_hora,
                 status: pacoteStatus,
                 valor: valorTotal,
-                observacoes: agendamento.observacoes,
-                servicos: Array.isArray(agendamento.servicos) 
-                  ? agendamento.servicos[0] 
-                  : agendamento.servicos as { nome: string; duracao: number },
-                profissionais: Array.isArray(agendamento.profissionais)
-                  ? agendamento.profissionais[0]
-                  : agendamento.profissionais as { nome: string; especialidade: string },
-                pagamentos: agendamento.pagamentos || [],
+                observacoes: representante.observacoes,
+                servicos: Array.isArray(representante.servicos) 
+                  ? representante.servicos[0] 
+                  : representante.servicos as { nome: string; duracao: number },
+                profissionais: Array.isArray(representante.profissionais)
+                  ? representante.profissionais[0]
+                  : representante.profissionais as { nome: string; especialidade: string },
+                pagamentos: representante.pagamentos || [],
                 isPacoteMensal: true,
                 pacoteInfo: {
                   sequencia: 1,
@@ -259,22 +221,20 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
                   sessoesCanceladas,
                   sessoesConcluidas,
                   sessoesPendentes,
-                  // Incluir APENAS sessões ativas para mostrar no card
-                  agendamentosPacote: sessoesAtivas.map(a => ({
-                    id: a.id,
-                    data_hora: a.data_hora,
-                    status: a.status,
-                    valor: a.valor || 0,
-                    observacoes: a.observacoes,
-                    servicos: Array.isArray(a.servicos) ? a.servicos[0] : a.servicos as { nome: string; duracao: number },
-                    profissionais: Array.isArray(a.profissionais) ? a.profissionais[0] : a.profissionais as { nome: string; especialidade: string },
-                    pagamentos: a.pagamentos || []
-                  }))
+                  agendamentosPacote
                 }
-              });
+              } as any);
             }
           }
-        } else {
+        }
+      }
+
+      // Processar agendamentos normais (não pacotes mensais)
+      for (const agendamento of normalData || []) {
+        const observacoes = agendamento.observacoes || '';
+        const isPacoteMensal = observacoes.includes('PACOTE MENSAL');
+        
+        if (!isPacoteMensal) {
           // Agendamento normal
           agendamentosProcessados.push({
             id: agendamento.id,
@@ -773,3 +733,4 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
 };
 
 export default ClientAppointments;
+
