@@ -205,6 +205,15 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
               const temSessaoConfirmada = todasAsSessoes.some(a => a.status === 'confirmado');
               const temSessaoComPagamentoPago = todasAsSessoes.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
               
+              // DEBUG TEMPORÁRIO - REMOVER DEPOIS
+              console.log('🔍 DEBUG PACOTE:', {
+                pacoteId,
+                totalSessoes: todasAsSessoes.length,
+                sessionStatus: todasAsSessoes.map(s => ({ id: s.id, status: s.status, pagamentos: s.pagamentos?.length })),
+                temSessaoConfirmada,
+                temSessaoComPagamentoPago
+              });
+              
               let pacoteStatus = 'agendado';
               
               if (temSessaoConfirmada || temSessaoComPagamentoPago) {
