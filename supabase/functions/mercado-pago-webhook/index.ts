@@ -254,20 +254,26 @@ serve(async (req) => {
                           console.log(`📋 ANTES - Agendamento ${agendamento.id} (${agendamento.data_hora}): Status = ${agendamento.status}`)
                         })
                         
-                        // Atualizar TODOS os agendamentos do pacote para confirmado
+                        // Atualizar APENAS agendamentos pendentes/agendados para confirmado
+                        // NÃO sobrescrever agendamentos já concluídos ou cancelados
                         for (const agendamento of pacoteAgendamentos) {
-                          const { error: updateError } = await supabaseClient
-                            .from('agendamentos')
-                            .update({
-                              status: 'confirmado',
-                              updated_at: new Date().toISOString()
-                            })
-                            .eq('id', agendamento.id)
-                            
-                          if (updateError) {
-                            console.error(`❌ Error updating appointment ${agendamento.id}:`, updateError)
+                          // Só atualizar se ainda não foi concluído ou cancelado
+                          if (agendamento.status !== 'concluido' && agendamento.status !== 'cancelado') {
+                            const { error: updateError } = await supabaseClient
+                              .from('agendamentos')
+                              .update({
+                                status: 'confirmado',
+                                updated_at: new Date().toISOString()
+                              })
+                              .eq('id', agendamento.id)
+                              
+                            if (updateError) {
+                              console.error(`❌ Error updating appointment ${agendamento.id}:`, updateError)
+                            } else {
+                              console.log(`✅ Confirmed appointment: ${agendamento.id} (${agendamento.data_hora}) - status changed from ${agendamento.status} to confirmado`)
+                            }
                           } else {
-                            console.log(`✅ Confirmed appointment: ${agendamento.id} (${agendamento.data_hora})`)
+                            console.log(`ℹ️ Skipping appointment ${agendamento.id} - already ${agendamento.status}`)
                           }
                         }
                         
