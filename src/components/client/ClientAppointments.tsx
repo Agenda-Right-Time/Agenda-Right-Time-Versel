@@ -228,6 +228,14 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
                 }
               }
 
+              // DEBUG ADICIONAL
+              console.log('📦 ADICIONANDO PACOTE À LISTA:', {
+                pacoteId,
+                agendamentoRepresentante: agendamento.id,
+                statusCalculado: pacoteStatus,
+                observacoes: agendamento.observacoes
+              });
+
               agendamentosProcessados.push({
                 id: agendamento.id,
                 data_hora: agendamento.data_hora,
