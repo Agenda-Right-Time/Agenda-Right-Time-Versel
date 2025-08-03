@@ -340,7 +340,7 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="max-w-md w-full bg-gray-900 border border-gray-700 p-6 rounded-lg space-y-4">
               <MercadoPagoCardForm
-                agendamentoId={agendamento.id}
+                agendamentoId={agendamento.isPacoteMensal && agendamento.pacoteInfo?.agendamentosPacote ? agendamento.pacoteInfo.agendamentosPacote[0].id : agendamento.id}
                 ownerId={ownerId}
                 paymentAmount={agendamento.isPacoteMensal ? agendamento.valor || 0 : valorAntecipado || (agendamento.valor || 0) * 0.5}
                 onSuccess={handleCardSuccess}
