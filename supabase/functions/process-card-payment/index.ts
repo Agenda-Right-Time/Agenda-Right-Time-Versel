@@ -235,10 +235,52 @@ serve(async (req) => {
         })
         .eq('id', pagamentoId)
 
-      await supabaseService
-        .from('agendamentos')
-        .update({ status: 'confirmado' })
-        .eq('id', agendamento_id)
+      // Verificar se é pacote mensal e atualizar adequadamente
+      const isPacoteMensal = agendamento.observacoes?.includes('PACOTE MENSAL')
+      
+      if (isPacoteMensal) {
+        // Se é pacote mensal, extrair o ID do pacote e confirmar TODOS os agendamentos (exceto concluídos/cancelados)
+        const pacoteMatch = agendamento.observacoes.match(/PACOTE MENSAL (PMT\d+)/)
+        const pacoteId = pacoteMatch ? pacoteMatch[1] : null
+        
+        if (pacoteId) {
+          console.log('📦 PACOTE MENSAL detected in process-card-payment! Package:', pacoteId)
+          
+          // Buscar TODOS os agendamentos do pacote
+          const { data: pacoteAgendamentos, error: fetchPacoteError } = await supabaseService
+            .from('agendamentos')
+            .select('id, status, data_hora')
+            .ilike('observacoes', `%PACOTE MENSAL ${pacoteId}%`)
+          
+          if (!fetchPacoteError && pacoteAgendamentos && pacoteAgendamentos.length > 0) {
+            console.log(`📋 Found ${pacoteAgendamentos.length} appointments for package ${pacoteId}`)
+            
+            // Atualizar APENAS agendamentos pendentes/agendados para confirmado
+            // NÃO sobrescrever agendamentos já concluídos ou cancelados
+            for (const agendamentoPacote of pacoteAgendamentos) {
+              if (agendamentoPacote.status !== 'concluido' && agendamentoPacote.status !== 'cancelado') {
+                await supabaseService
+                  .from('agendamentos')
+                  .update({
+                    status: 'confirmado',
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', agendamentoPacote.id)
+                
+                console.log(`✅ Confirmed appointment: ${agendamentoPacote.id} - status changed from ${agendamentoPacote.status} to confirmado`)
+              } else {
+                console.log(`ℹ️ Skipping appointment ${agendamentoPacote.id} - already ${agendamentoPacote.status}`)
+              }
+            }
+          }
+        }
+      } else {
+        // Agendamento normal - atualizar apenas o específico
+        await supabaseService
+          .from('agendamentos')
+          .update({ status: 'confirmado' })
+          .eq('id', agendamento_id)
+      }
 
       return new Response(
         JSON.stringify({ 
