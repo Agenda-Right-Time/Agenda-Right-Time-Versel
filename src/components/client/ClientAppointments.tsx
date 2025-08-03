@@ -199,23 +199,22 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
                 a.status !== 'cancelado' && a.status !== 'concluido'
               );
               
-              // LÓGICA CORRETA: Se os agendamentos já estão confirmados, manter confirmado (não verificar pagamentos)
-              // Só verificar pagamentos se ainda há sessões pendentes/agendadas
-              const temSessoesConfirmadas = sessoesAtivas.some(a => a.status === 'confirmado');
+              // LÓGICA CORRETA: Verificar se QUALQUER sessão do pacote (incluindo concluídas/canceladas) já foi confirmada
+              // Se sim, manter o pacote como confirmado independentemente do representante atual
+              const todasAsSessoes = agendamentosPacote;
+              const temSessaoConfirmada = todasAsSessoes.some(a => a.status === 'confirmado');
+              const temSessaoComPagamentoPago = todasAsSessoes.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
               
               let pacoteStatus = 'agendado';
               
-              if (temSessoesConfirmadas) {
-                // Se há sessões confirmadas, pacote está confirmado (não verificar pagamentos)
+              if (temSessaoConfirmada || temSessaoComPagamentoPago) {
+                // Se qualquer sessão já foi confirmada OU tem pagamento pago, pacote permanece confirmado
                 pacoteStatus = 'confirmado';
               } else {
-                // Só verificar pagamentos se ainda não foi confirmado
-                const hasPaidPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
+                // Só verificar pagamentos se nenhuma sessão foi confirmada ainda
                 const hasPendingPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
                 
-                if (hasPaidPayment) {
-                  pacoteStatus = 'confirmado';
-                } else if (hasPendingPayment) {
+                if (hasPendingPayment) {
                   pacoteStatus = 'pendente';
                 }
               }
