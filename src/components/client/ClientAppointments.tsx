@@ -190,6 +190,15 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
               a.status !== 'cancelado' && a.status !== 'concluido'
             ).length;
             
+            // DEBUG: Verificar condição de exibição do pacote
+            console.log('🔄 VERIFICANDO CONDIÇÃO EXIBIÇÃO:', {
+              pacoteId,
+              sessoesPendentes,
+              sessoesCanceladas, 
+              sessoesConcluidas,
+              condicaoAtendida: (sessoesPendentes > 0 || sessoesCanceladas > 0 || sessoesConcluidas > 0)
+            });
+
             // Mostrar o pacote se há pelo menos uma sessão ativa OU se há sessões canceladas/concluídas para mostrar na dashboard
             if (sessoesPendentes > 0 || sessoesCanceladas > 0 || sessoesConcluidas > 0) {
               const valorTotal = agendamentosPacote.reduce((total, a) => total + (a.valor || 0), 0);
