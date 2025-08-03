@@ -190,60 +190,33 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
               a.status !== 'cancelado' && a.status !== 'concluido'
             ).length;
             
-            // DEBUG: Verificar condição de exibição do pacote
-            console.log('🔄 VERIFICANDO CONDIÇÃO EXIBIÇÃO:', {
-              pacoteId,
-              sessoesPendentes,
-              sessoesCanceladas, 
-              sessoesConcluidas,
-              condicaoAtendida: (sessoesPendentes > 0 || sessoesCanceladas > 0 || sessoesConcluidas > 0)
-            });
-
-            // Mostrar o pacote se há pelo menos uma sessão ativa OU se há sessões canceladas/concluídas para mostrar na dashboard
-            if (sessoesPendentes > 0 || sessoesCanceladas > 0 || sessoesConcluidas > 0) {
-              const valorTotal = agendamentosPacote.reduce((total, a) => total + (a.valor || 0), 0);
-              
-              // Filtrar sessões ativas para verificação e exibição
-              const sessoesAtivas = agendamentosPacote.filter(a => 
-                a.status !== 'cancelado' && a.status !== 'concluido'
-              );
-              
-              // LÓGICA CORRETA: Verificar se QUALQUER sessão do pacote (incluindo concluídas/canceladas) já foi confirmada
-              // Se sim, manter o pacote como confirmado independentemente do representante atual
-              const todasAsSessoes = agendamentosPacote;
-              const temSessaoConfirmada = todasAsSessoes.some(a => a.status === 'confirmado');
-              const temSessaoComPagamentoPago = todasAsSessoes.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
-              
-              // DEBUG TEMPORÁRIO - REMOVER DEPOIS
-              console.log('🔍 DEBUG PACOTE:', {
-                pacoteId,
-                totalSessoes: todasAsSessoes.length,
-                sessionStatus: todasAsSessoes.map(s => ({ id: s.id, status: s.status, pagamentos: s.pagamentos?.length })),
-                temSessaoConfirmada,
-                temSessaoComPagamentoPago
-              });
-              
-              let pacoteStatus = 'agendado';
-              
-              if (temSessaoConfirmada || temSessaoComPagamentoPago) {
-                // Se qualquer sessão já foi confirmada OU tem pagamento pago, pacote permanece confirmado
-                pacoteStatus = 'confirmado';
-              } else {
-                // Só verificar pagamentos se nenhuma sessão foi confirmada ainda
-                const hasPendingPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
+                          // Mostrar o pacote se há pelo menos uma sessão ativa OU se há sessões canceladas/concluídas para mostrar na dashboard
+              if (sessoesPendentes > 0 || sessoesCanceladas > 0 || sessoesConcluidas > 0) {
+                const valorTotal = agendamentosPacote.reduce((total, a) => total + (a.valor || 0), 0);
                 
-                if (hasPendingPayment) {
-                  pacoteStatus = 'pendente';
+                // Filtrar sessões ativas para verificação e exibição
+                const sessoesAtivas = agendamentosPacote.filter(a => 
+                  a.status !== 'cancelado' && a.status !== 'concluido'
+                );
+                
+                // LÓGICA CORRETA: Se há pagamento pago em QUALQUER sessão, pacote está confirmado
+                // Não importa o status individual das sessões, se foi pago, está confirmado
+                const todasAsSessoes = agendamentosPacote;
+                const temPagamentoPago = todasAsSessoes.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
+                
+                let pacoteStatus = 'agendado';
+                
+                if (temPagamentoPago) {
+                  // Se qualquer sessão tem pagamento pago, pacote está confirmado
+                  pacoteStatus = 'confirmado';
+                } else {
+                  // Só verificar pagamentos pendentes se não há pagamento pago
+                  const hasPendingPayment = todasAsSessoes.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
+                  
+                  if (hasPendingPayment) {
+                    pacoteStatus = 'pendente';
+                  }
                 }
-              }
-
-              // DEBUG ADICIONAL
-              console.log('📦 ADICIONANDO PACOTE À LISTA:', {
-                pacoteId,
-                agendamentoRepresentante: agendamento.id,
-                statusCalculado: pacoteStatus,
-                observacoes: agendamento.observacoes
-              });
 
               agendamentosProcessados.push({
                 id: agendamento.id,
