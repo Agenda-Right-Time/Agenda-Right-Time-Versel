@@ -170,6 +170,15 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
         const observacoes = agendamento.observacoes || '';
         const isPacoteMensal = observacoes.includes('PACOTE MENSAL');
         
+        // DEBUG: Verificar se pacote mensal aparece no loop
+        if (isPacoteMensal) {
+          console.log('🔍 PACOTE MENSAL ENCONTRADO NO LOOP:', {
+            id: agendamento.id,
+            status: agendamento.status,
+            observacoes: observacoes.substring(0, 50)
+          });
+        }
+        
         if (isPacoteMensal) {
           // Extrair ID do pacote das observações
           const pacoteMatch = observacoes.match(/PACOTE MENSAL (PMT\d+)/);
