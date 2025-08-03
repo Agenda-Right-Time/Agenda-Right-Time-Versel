@@ -194,15 +194,18 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
             if (sessoesPendentes > 0 || sessoesCanceladas > 0 || sessoesConcluidas > 0) {
               const valorTotal = agendamentosPacote.reduce((total, a) => total + (a.valor || 0), 0);
               
-              // Determinar status do pacote baseado nos pagamentos de TODAS as sessões do pacote
-              // IMPORTANTE: Verificar pagamento em qualquer sessão, pois o pagamento pode estar numa sessão concluída
-              const hasPaidPayment = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
-              const hasPendingPayment = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
-              
-              // Filtrar sessões ativas para mostrar no card e contar
+              // Determinar status do pacote baseado nos pagamentos das sessões ATIVAS (não canceladas/concluídas)
               const sessoesAtivas = agendamentosPacote.filter(a => 
                 a.status !== 'cancelado' && a.status !== 'concluido'
               );
+              let hasPaidPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
+              const hasPendingPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
+              
+              // CORREÇÃO: Se não encontrou pagamento nas sessões ativas, verificar se há pagamento em sessões concluídas
+              // Isso resolve o problema quando o primeiro agendamento (que tem o pagamento) é concluído
+              if (!hasPaidPayment) {
+                hasPaidPayment = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
+              }
               
               let pacoteStatus = 'agendado';
               if (hasPaidPayment) {
