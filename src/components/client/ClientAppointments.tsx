@@ -211,6 +211,17 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
                 // LÓGICA CORRETA: Se há pagamento pago em QUALQUER sessão, pacote está confirmado
                 // Não importa o status individual das sessões, se foi pago, está confirmado
                 const todasAsSessoes = agendamentosPacote;
+                
+                // DEBUG: Verificar pagamentos de cada sessão
+                console.log('💰 VERIFICANDO PAGAMENTOS DO PACOTE:', {
+                  pacoteId,
+                  sessoes: todasAsSessoes.map(s => ({
+                    id: s.id,
+                    status: s.status,
+                    pagamentos: s.pagamentos?.map((p: any) => ({ status: p.status, valor: p.valor })) || 'SEM PAGAMENTOS'
+                  }))
+                });
+                
                 const temPagamentoPago = todasAsSessoes.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
                 
                 let pacoteStatus = 'agendado';
