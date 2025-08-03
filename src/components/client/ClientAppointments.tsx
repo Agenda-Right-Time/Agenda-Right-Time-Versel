@@ -194,24 +194,30 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
             if (sessoesPendentes > 0 || sessoesCanceladas > 0 || sessoesConcluidas > 0) {
               const valorTotal = agendamentosPacote.reduce((total, a) => total + (a.valor || 0), 0);
               
-              // Determinar status do pacote baseado nos pagamentos das sessões ATIVAS (não canceladas/concluídas)
+              // Filtrar sessões ativas para verificação e exibição
               const sessoesAtivas = agendamentosPacote.filter(a => 
                 a.status !== 'cancelado' && a.status !== 'concluido'
               );
-              let hasPaidPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
-              const hasPendingPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
               
-              // CORREÇÃO: Se não encontrou pagamento nas sessões ativas, verificar se há pagamento em sessões concluídas
-              // Isso resolve o problema quando o primeiro agendamento (que tem o pagamento) é concluído
-              if (!hasPaidPayment) {
-                hasPaidPayment = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
-              }
+              // LÓGICA CORRETA: Se os agendamentos já estão confirmados, manter confirmado (não verificar pagamentos)
+              // Só verificar pagamentos se ainda há sessões pendentes/agendadas
+              const temSessoesConfirmadas = sessoesAtivas.some(a => a.status === 'confirmado');
               
               let pacoteStatus = 'agendado';
-              if (hasPaidPayment) {
+              
+              if (temSessoesConfirmadas) {
+                // Se há sessões confirmadas, pacote está confirmado (não verificar pagamentos)
                 pacoteStatus = 'confirmado';
-              } else if (hasPendingPayment) {
-                pacoteStatus = 'pendente';
+              } else {
+                // Só verificar pagamentos se ainda não foi confirmado
+                const hasPaidPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
+                const hasPendingPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
+                
+                if (hasPaidPayment) {
+                  pacoteStatus = 'confirmado';
+                } else if (hasPendingPayment) {
+                  pacoteStatus = 'pendente';
+                }
               }
 
               agendamentosProcessados.push({
