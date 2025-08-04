@@ -144,8 +144,8 @@ serve(async (req) => {
         console.log(`🔍 Pagamento MP: ID=${p.id}, Valor=${valorPagamento}, Status=${p.status}, Método=${p.payment_method_id}, Data=${p.date_created}`)
         console.log(`🎯 Critérios: Aprovado=${isApproved}, PIX=${isPix}, ValorExato=${valorExato} (esperado=${valorEsperado}, diferença=${Math.abs(valorPagamento - valorEsperado)})`)
         
-        // CRITÉRIOS: Aprovado + (PIX OU CARTÃO) + Valor EXATO (com tolerância de centavos)
-        if (isApproved && valorExato) {
+        // CRITÉRIOS RÍGIDOS: Aprovado + PIX + Valor EXATO (com tolerância de centavos)
+        if (isApproved && isPix && valorExato) {
           pagamentoEncontrado = p
           console.log(`✅ PAGAMENTO VÁLIDO ENCONTRADO! ID=${p.id}, Valor: ${valorPagamento}`)
           break

@@ -68,9 +68,11 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
       if (agendamentos.length === 0) {
         setLoading(true);
       }
+      console.log('🔍 Buscando agendamentos para:', clientProfile?.email || 'sem email', 'owner:', ownerId);
 
       // Se não tem perfil de cliente ou é um ID inválido, não carregar dados
       if (!isValidUUID(ownerId)) {
+        console.log('📋 ID inválido:', ownerId);
         setAgendamentos([]);
         setLoading(false);
         return;
@@ -79,6 +81,7 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
       // Buscar pelo perfil de cliente OU pelo ID do usuário se não tiver perfil
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        console.log('📋 Usuário não autenticado');
         setAgendamentos([]);
         setLoading(false);
         return;
@@ -163,15 +166,23 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
       const agendamentosProcessados: Agendamento[] = [];
       const pacotesProcessados = new Set<string>();
 
-      // CORREÇÃO: Processar todos os pacotes encontrados, mesmo que o representante não esteja em normalData
-      for (const [pacoteId, agendamentosPacote] of pacotesEncontrados) {
-        if (!pacotesProcessados.has(pacoteId)) {
-          pacotesProcessados.add(pacoteId);
+      for (const agendamento of normalData || []) {
+        const observacoes = agendamento.observacoes || '';
+        const isPacoteMensal = observacoes.includes('PACOTE MENSAL');
+        
+        if (isPacoteMensal) {
+          // Extrair ID do pacote das observações
+          const pacoteMatch = observacoes.match(/PACOTE MENSAL (PMT\d+)/);
+          const pacoteId = pacoteMatch ? pacoteMatch[1] : '';
+          const sequenciaMatch = observacoes.match(/Sessão (\d+)\/4/);
+          const sequencia = sequenciaMatch ? parseInt(sequenciaMatch[1]) : 1;
 
-          // Usar qualquer agendamento do pacote como representante (preferencialmente o primeiro ativo)
-          const representante = agendamentosPacote.find(a => a.status !== 'cancelado' && a.status !== 'concluido') || agendamentosPacote[0];
-          
-          if (representante) {
+          // Se é qualquer sessão do pacote e ainda não foi processado
+          if (pacoteId && !pacotesProcessados.has(pacoteId)) {
+            pacotesProcessados.add(pacoteId);
+
+            const agendamentosPacote = pacotesEncontrados.get(pacoteId) || [];
+
             // Contar sessões por status
             const sessoesCanceladas = agendamentosPacote.filter(a => a.status === 'cancelado').length;
             const sessoesConcluidas = agendamentosPacote.filter(a => a.status === 'concluido').length;
@@ -183,33 +194,33 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
             if (sessoesPendentes > 0 || sessoesCanceladas > 0 || sessoesConcluidas > 0) {
               const valorTotal = agendamentosPacote.reduce((total, a) => total + (a.valor || 0), 0);
               
-              // LÓGICA CORRETA: Se há pagamento pago em QUALQUER sessão, pacote está confirmado
-              const temPagamentoPago = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
+              // Determinar status do pacote baseado nos pagamentos das sessões ATIVAS (não canceladas/concluídas)
+              const sessoesAtivas = agendamentosPacote.filter(a => 
+                a.status !== 'cancelado' && a.status !== 'concluido'
+              );
+              const hasPaidPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
+              const hasPendingPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
               
               let pacoteStatus = 'agendado';
-              
-              if (temPagamentoPago) {
+              if (hasPaidPayment) {
                 pacoteStatus = 'confirmado';
-              } else {
-                const hasPendingPayment = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
-                if (hasPendingPayment) {
-                  pacoteStatus = 'pendente';
-                }
+              } else if (hasPendingPayment) {
+                pacoteStatus = 'pendente';
               }
 
               agendamentosProcessados.push({
-                id: representante.id,
-                data_hora: representante.data_hora,
+                id: agendamento.id,
+                data_hora: agendamento.data_hora,
                 status: pacoteStatus,
                 valor: valorTotal,
-                observacoes: representante.observacoes,
-                servicos: Array.isArray(representante.servicos) 
-                  ? representante.servicos[0] 
-                  : representante.servicos as { nome: string; duracao: number },
-                profissionais: Array.isArray(representante.profissionais)
-                  ? representante.profissionais[0]
-                  : representante.profissionais as { nome: string; especialidade: string },
-                pagamentos: representante.pagamentos || [],
+                observacoes: agendamento.observacoes,
+                servicos: Array.isArray(agendamento.servicos) 
+                  ? agendamento.servicos[0] 
+                  : agendamento.servicos as { nome: string; duracao: number },
+                profissionais: Array.isArray(agendamento.profissionais)
+                  ? agendamento.profissionais[0]
+                  : agendamento.profissionais as { nome: string; especialidade: string },
+                pagamentos: agendamento.pagamentos || [],
                 isPacoteMensal: true,
                 pacoteInfo: {
                   sequencia: 1,
@@ -218,20 +229,22 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
                   sessoesCanceladas,
                   sessoesConcluidas,
                   sessoesPendentes,
-                  agendamentosPacote
+                  // Incluir APENAS sessões ativas para mostrar no card
+                  agendamentosPacote: sessoesAtivas.map(a => ({
+                    id: a.id,
+                    data_hora: a.data_hora,
+                    status: a.status,
+                    valor: a.valor || 0,
+                    observacoes: a.observacoes,
+                    servicos: Array.isArray(a.servicos) ? a.servicos[0] : a.servicos as { nome: string; duracao: number },
+                    profissionais: Array.isArray(a.profissionais) ? a.profissionais[0] : a.profissionais as { nome: string; especialidade: string },
+                    pagamentos: a.pagamentos || []
+                  }))
                 }
-              } as any);
+              });
             }
           }
-        }
-      }
-
-      // Processar agendamentos normais (não pacotes mensais)
-      for (const agendamento of normalData || []) {
-        const observacoes = agendamento.observacoes || '';
-        const isPacoteMensal = observacoes.includes('PACOTE MENSAL');
-        
-        if (!isPacoteMensal) {
+        } else {
           // Agendamento normal
           agendamentosProcessados.push({
             id: agendamento.id,
@@ -276,6 +289,8 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !ownerId || !mounted) return;
 
+      console.log('🔄 Configurando listener real-time para agendamentos');
+      
       channel = supabase
         .channel('client-agendamentos-unified')
         .on(
@@ -287,6 +302,7 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
             filter: `user_id=eq.${ownerId}`
           },
           (payload) => {
+            console.log('🔄 Mudança em agendamento detectada:', payload);
             if (mounted) {
               // Debounce para evitar múltiplas chamadas
               setTimeout(() => {
@@ -303,6 +319,7 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
             table: 'pagamentos'
           },
           (payload) => {
+            console.log('🔄 Mudança em pagamento detectada:', payload);
             if (mounted) {
               // Debounce para evitar múltiplas chamadas
               setTimeout(() => {
@@ -317,6 +334,7 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
     // Handler para quando a página fica visível novamente
     const handleVisibilityChange = () => {
       if (!document.hidden && mounted) {
+        console.log('🔄 Página visível novamente, atualizando agendamentos...');
         fetchAgendamentos();
       }
     };
@@ -324,6 +342,7 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
     // Verificar se veio de redirect de pagamento
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('tab') === 'meus-agendamentos') {
+      console.log('🔄 Redirecionado para agendamentos, carregando dados...');
     }
 
     // Inicializar
@@ -334,6 +353,7 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
     // Cleanup
     return () => {
       mounted = false;
+      console.log('🔌 Removendo listeners');
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (channel) {
         supabase.removeChannel(channel);
@@ -723,4 +743,3 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
 };
 
 export default ClientAppointments;
-

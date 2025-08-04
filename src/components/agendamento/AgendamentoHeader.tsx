@@ -118,8 +118,10 @@ const AgendamentoHeader = ({
       if (empresaSlug) {
         console.log('Navegando para:', `/${empresaSlug}`);
         navigate(`/${empresaSlug}`, { replace: true });
-      } 
-      
+      } else {
+        console.log('Navegando para página principal');
+        navigate('/', { replace: true });
+      }
     } catch (error) {
       toast({
         title: "Erro",

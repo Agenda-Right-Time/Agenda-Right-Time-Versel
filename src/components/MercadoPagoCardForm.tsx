@@ -362,10 +362,10 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
           <p className="text-red-400 text-lg font-semibold">
             Seu banco recusou o pagamento
           </p>
-          <p className="text-gray-300 mb-2">
+          <p className="text-gray-300 mt-2">
             Verifique os dados do cartão ou tente outro método de pagamento
           </p>
-          <div className="flex items-center justify-center gap-5 mt-4">
+          <div className="mt-4 space-y-2">
             <Button
               onClick={() => window.location.reload()}
               className="bg-blue-500 hover:bg-blue-600 text-white font-semibold"
@@ -376,9 +376,9 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
             <Button
               variant="outline"
               onClick={onCancel}
-              className="border-gray-600 text-gray-900 hover:bg-gray-800"
+              className="border-gray-600 text-white hover:bg-gray-800"
             >
-              Voltar ao PIX             
+              Voltar ao PIX
             </Button>
           </div>
         </CardHeader>
