@@ -264,12 +264,15 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
         }
       }
 
-      // Só atualizar se realmente houver mudanças para evitar piscar
-      const agendamentosAtuais = JSON.stringify(agendamentos.map(a => ({ id: a.id, status: a.status, data_hora: a.data_hora })));
-      const novosAgendamentos = JSON.stringify(agendamentosProcessados.map(a => ({ id: a.id, status: a.status, data_hora: a.data_hora })));
+      console.log('📊 Agendamentos processados:', agendamentosProcessados.length);
+      console.log('📊 Agendamentos atuais na tela:', agendamentos.length);
       
-      if (agendamentosAtuais !== novosAgendamentos) {
+      // Sempre atualizar, mas com verificação simples para evitar piscar desnecessário
+      if (agendamentosProcessados.length > 0 || agendamentos.length === 0) {
+        console.log('✅ Atualizando agendamentos na tela');
         setAgendamentos(agendamentosProcessados);
+      } else {
+        console.log('⚠️ Não atualizando - mantendo agendamentos na tela');
       }
     } catch (error) {
       console.error('❌ Erro ao buscar agendamentos:', error);
