@@ -264,14 +264,20 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
         }
       }
 
-      setAgendamentos(agendamentosProcessados);
+      // Só atualizar se realmente houver mudanças para evitar piscar
+      const agendamentosAtuais = JSON.stringify(agendamentos.map(a => ({ id: a.id, status: a.status, data_hora: a.data_hora })));
+      const novosAgendamentos = JSON.stringify(agendamentosProcessados.map(a => ({ id: a.id, status: a.status, data_hora: a.data_hora })));
+      
+      if (agendamentosAtuais !== novosAgendamentos) {
+        setAgendamentos(agendamentosProcessados);
+      }
     } catch (error) {
       console.error('❌ Erro ao buscar agendamentos:', error);
       setAgendamentos([]);
     } finally {
       setLoading(false);
     }
-  }, [ownerId, clientProfile, agendamentos.length]); // Dependências otimizadas
+  }, [ownerId, clientProfile]); // Dependências sem loop infinito
 
   // Unificando todos os useEffect em um só para evitar conflitos
   useEffect(() => {
@@ -307,7 +313,7 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
               // Debounce para evitar múltiplas chamadas
               setTimeout(() => {
                 if (mounted) fetchAgendamentos();
-              }, 500);
+              }, 3000);
             }
           }
         )
@@ -324,7 +330,7 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
               // Debounce para evitar múltiplas chamadas
               setTimeout(() => {
                 if (mounted) fetchAgendamentos();
-              }, 500);
+              }, 3000);
             }
           }
         )
