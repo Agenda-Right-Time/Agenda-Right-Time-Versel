@@ -267,13 +267,9 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
       console.log('📊 Agendamentos processados:', agendamentosProcessados.length);
       console.log('📊 Agendamentos atuais na tela:', agendamentos.length);
       
-      // Sempre atualizar, mas com verificação simples para evitar piscar desnecessário
-      if (agendamentosProcessados.length > 0 || agendamentos.length === 0) {
-        console.log('✅ Atualizando agendamentos na tela');
-        setAgendamentos(agendamentosProcessados);
-      } else {
-        console.log('⚠️ Não atualizando - mantendo agendamentos na tela');
-      }
+      // Sempre atualizar a lista de agendamentos
+      console.log('✅ Atualizando agendamentos na tela');
+      setAgendamentos(agendamentosProcessados);
     } catch (error) {
       console.error('❌ Erro ao buscar agendamentos:', error);
       setAgendamentos([]);
@@ -527,31 +523,39 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
       return;
     }
 
-    // Não permitir cancelamento de pacotes mensais
-    if (appointment.isPacoteMensal) {
+    // Não permitir cancelamento de pacotes mensais CONFIRMADOS (mas permitir se estiver pendente)
+    if (appointment.isPacoteMensal && appointment.status !== 'pendente') {
       toast({
         title: "Cancelamento não permitido",
-        description: "Pacotes mensais não podem ser cancelados pelo cliente.",
+        description: "Pacotes mensais não podem ser cancelados após a confirmação.",
         variant: "destructive"
       });
       return;
     }
 
-    // Verificar se ainda está dentro do prazo de 2 dias (48h) antes do agendamento
-    const appointmentDate = new Date(appointment.data_hora);
-    const now = new Date();
-    const hoursUntilAppointment = Math.floor((appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60));
-    
-    if (hoursUntilAppointment < 48) {
-      toast({
-        title: "Cancelamento não disponível",
-        description: "Só é possível cancelar agendamentos com pelo menos 2 dias (48h) de antecedência.",
-        variant: "destructive"
-      });
-      return;
+    // Verificar prazo apenas para agendamentos confirmados (não pendentes)
+    if (appointment.status !== 'pendente') {
+      // Verificar se ainda está dentro do prazo de 2 dias (48h) antes do agendamento
+      const appointmentDate = new Date(appointment.data_hora);
+      const now = new Date();
+      const hoursUntilAppointment = Math.floor((appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+      
+      if (hoursUntilAppointment < 48) {
+        toast({
+          title: "Cancelamento não disponível",
+          description: "Só é possível cancelar agendamentos com pelo menos 2 dias (48h) de antecedência.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
-    if (!confirm('Tem certeza que deseja cancelar este agendamento?')) {
+    // Confirmar cancelamento
+    const confirmMessage = appointment.isPacoteMensal 
+      ? 'Tem certeza que deseja cancelar todo o pacote mensal? Todas as 4 sessões serão canceladas.'
+      : 'Tem certeza que deseja cancelar este agendamento?';
+      
+    if (!confirm(confirmMessage)) {
       return;
     }
 
@@ -559,22 +563,77 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
     try {
       console.log('🚫 Cancelando agendamento:', appointmentId);
 
-      const { error } = await supabase
-        .from('agendamentos')
-        .update({ status: 'cancelado' })
-        .eq('id', appointmentId);
+      if (appointment.isPacoteMensal) {
+        // Para pacotes mensais, extrair o ID do pacote e cancelar todos os agendamentos relacionados
+        const pacoteMatch = appointment.observacoes?.match(/PACOTE MENSAL (PMT\d+)/);
+        if (pacoteMatch) {
+          const pacoteId = pacoteMatch[1];
+          console.log('🗂️ Cancelando pacote completo:', pacoteId);
+          
+          // Buscar e cancelar todos os agendamentos do pacote
+          const { data: pacoteAgendamentos, error: searchError } = await supabase
+            .from('agendamentos')
+            .select('id')
+            .eq('user_id', ownerId)
+            .like('observacoes', `%${pacoteId}%`);
+          
+          if (searchError) {
+            console.error('❌ Erro ao buscar agendamentos do pacote:', searchError);
+            throw searchError;
+          }
+          
+          console.log('📋 Agendamentos do pacote encontrados:', pacoteAgendamentos);
+          
+          // Cancelar todos os agendamentos do pacote
+          const { error } = await supabase
+            .from('agendamentos')
+            .update({ status: 'cancelado' })
+            .in('id', pacoteAgendamentos?.map(a => a.id) || []);
+          
+          if (error) {
+            console.error('❌ Erro ao cancelar pacote:', error);
+            throw error;
+          }
+          
+          console.log('✅ Pacote mensal cancelado com sucesso');
+          
+          toast({
+            title: "Pacote mensal cancelado! ✅",
+            description: "Todas as sessões do pacote foram canceladas com sucesso."
+          });
+        } else {
+          // Fallback: cancelar apenas o agendamento individual se não conseguir extrair o pacoteId
+          const { error } = await supabase
+            .from('agendamentos')
+            .update({ status: 'cancelado' })
+            .eq('id', appointmentId);
+          
+          if (error) throw error;
+          
+          toast({
+            title: "Agendamento cancelado! ✅",
+            description: "Seu agendamento foi cancelado com sucesso."
+          });
+        }
+      } else {
+        // Para agendamentos normais, cancelar apenas o individual
+        const { error } = await supabase
+          .from('agendamentos')
+          .update({ status: 'cancelado' })
+          .eq('id', appointmentId);
 
-      if (error) {
-        console.error('❌ Erro ao cancelar agendamento:', error);
-        throw error;
+        if (error) {
+          console.error('❌ Erro ao cancelar agendamento:', error);
+          throw error;
+        }
+
+        console.log('✅ Agendamento cancelado com sucesso');
+        
+        toast({
+          title: "Agendamento cancelado! ✅",
+          description: "Seu agendamento foi cancelado com sucesso."
+        });
       }
-
-      console.log('✅ Agendamento cancelado com sucesso');
-      
-      toast({
-        title: "Agendamento cancelado! ✅",
-        description: "Seu agendamento foi cancelado com sucesso."
-      });
 
       await fetchAgendamentos();
 

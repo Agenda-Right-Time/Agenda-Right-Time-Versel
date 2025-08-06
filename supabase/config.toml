@@ -1,19 +1,1 @@
 project_id = "vncehdqqbasjdcszktna"
-
-[functions.create-card-payment]
-verify_jwt = false
-
-[functions.test-mp-api]
-verify_jwt = false
-
-[functions.create-stripe-subscription]
-verify_jwt = false
-
-[functions.test-stripe-connection]
-verify_jwt = false
-
-[functions.check-stripe-payment]
-verify_jwt = false
-
-[functions.stripe-webhook]
-verify_jwt = false

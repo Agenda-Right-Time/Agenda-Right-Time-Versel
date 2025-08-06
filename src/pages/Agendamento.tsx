@@ -304,7 +304,7 @@ const Agendamento = () => {
         servico_id: servicoSelecionado.id,
         profissional_id: profissionalSelecionado.id,
         data_hora: dateTime.toISOString(),
-        status: 'agendado',
+        status: 'pendente',
         valor: servicoSelecionado.preco / 4,
         observacoes: `${observacoes || ''} - PACOTE MENSAL ${pacoteId} - Sessão ${index + 1}/4`.trim()
       }));
@@ -502,7 +502,7 @@ const Agendamento = () => {
         servico_id: servicoSelecionado.id,
         profissional_id: profissionalSelecionado.id,
         data_hora: dataHora.toISOString(),
-        status: 'agendado',
+        status: 'pendente',
         valor: servicoSelecionado.preco,
         observacoes: observacoes || null
       };
@@ -781,7 +781,6 @@ const Agendamento = () => {
         businessName="Agenda Right Time"
         showClientDashboard={!!user}
         onShowDashboard={handleGoToClientArea}
-        clientEmail={user?.email}
       />
       
       <div className="container mx-auto px-4 py-8">
@@ -922,6 +921,7 @@ const Agendamento = () => {
                 observacoes={observacoes}
                 onObservacoesChange={setObservacoes}
                 ownerId={finalOwnerId || ''}
+                clienteId={clientProfile?.id || ''}
               />
             ) : (
               selectedDateTime && (
@@ -938,6 +938,7 @@ const Agendamento = () => {
                   observacoes={observacoes}
                   onObservacoesChange={setObservacoes}
                   ownerId={finalOwnerId || ''}
+                  clienteId={clientProfile?.id || ''}
                 />
               )
             )}

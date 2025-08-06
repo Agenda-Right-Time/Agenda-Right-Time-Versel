@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePaymentStatus } from '@/hooks/usePaymentStatus';
 import { useNavigate } from 'react-router-dom';
 import QRCodeLib from 'qrcode';
+import { usePendingAppointments } from '@/hooks/usePendingAppointments';
 
 interface ConfirmacaoPacoteMensalProps {
   selectedDateTimes: Date[];
@@ -27,6 +28,7 @@ interface ConfirmacaoPacoteMensalProps {
   observacoes: string;
   onObservacoesChange: (value: string) => void;
   ownerId: string;
+  clienteId?: string;
 }
 
 const ConfirmacaoPacoteMensal: React.FC<ConfirmacaoPacoteMensalProps> = ({
@@ -40,7 +42,8 @@ const ConfirmacaoPacoteMensal: React.FC<ConfirmacaoPacoteMensalProps> = ({
   clienteNome,
   observacoes,
   onObservacoesChange,
-  ownerId
+  ownerId,
+  clienteId
 }) => {
   const [establishmentName, setEstablishmentName] = useState('');
   const [showPixPayment, setShowPixPayment] = useState(false);
@@ -54,6 +57,15 @@ const ConfirmacaoPacoteMensal: React.FC<ConfirmacaoPacoteMensalProps> = ({
   const [pacoteId, setPacoteId] = useState<string>('');
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  console.log('🔍 ConfirmacaoPacoteMensal - dados recebidos:', { clienteId, ownerId, selectedProfissional });
+
+  const { hasPendingAppointments, pendingAppointmentIds } = usePendingAppointments({
+    clienteId: clienteId || '',
+    ownerId,
+    profissionalId: selectedProfissional,
+    enabled: !!clienteId && !!selectedProfissional
+  });
 
   // Hook para monitorar o status do pagamento em tempo real
   const { paymentStatus: realTimePaymentStatus } = usePaymentStatus({
@@ -419,14 +431,33 @@ const ConfirmacaoPacoteMensal: React.FC<ConfirmacaoPacoteMensalProps> = ({
         
         {/* Botões de ação */}
         <div className="space-y-3">
-          {/* Botão principal de confirmação */}
-          <Button
-            onClick={handleConfirmarPacote}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold hover:from-purple-600 hover:to-purple-700"
-          >
-            {loading ? 'Processando...' : 'Confirmar Pacote Mensal'}
-          </Button>
+          {hasPendingAppointments ? (
+            <>
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                <p className="text-red-400 text-sm font-medium mb-1">
+                  ⚠️ Agendamentos Pendentes
+                </p>
+                <p className="text-gray-300 text-sm">
+                  Você possui agendamentos pendentes com este profissional. 
+                  Faça o pagamento ou cancele para continuar agendando.
+                </p>
+              </div>
+              <Button
+                disabled={true}
+                className="w-full bg-gray-600 text-gray-400 cursor-not-allowed"
+              >
+                Confirmar Pacote Mensal
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={handleConfirmarPacote}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold hover:from-purple-600 hover:to-purple-700"
+            >
+              {loading ? 'Processando...' : 'Confirmar Pacote Mensal'}
+            </Button>
+          )}
 
           {/* Botões de pagamento (aparecem apenas depois da confirmação) */}
           {pacoteAgendamentoId && (

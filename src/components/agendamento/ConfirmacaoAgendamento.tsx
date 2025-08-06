@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { usePendingAppointments } from '@/hooks/usePendingAppointments';
 
 interface Servico {
   id: string;
@@ -33,6 +34,7 @@ interface ConfirmacaoAgendamentoProps {
   observacoes?: string;
   onObservacoesChange?: (value: string) => void;
   ownerId: string;
+  clienteId?: string;
 }
 
 const ConfirmacaoAgendamento: React.FC<ConfirmacaoAgendamentoProps> = ({
@@ -45,9 +47,19 @@ const ConfirmacaoAgendamento: React.FC<ConfirmacaoAgendamentoProps> = ({
   onConfirmar,
   loading,
   clienteNome,
-  ownerId
+  ownerId,
+  clienteId
 }) => {
   const [percentualAntecipado, setPercentualAntecipado] = useState<number>(50);
+  
+  console.log('🔍 ConfirmacaoAgendamento - dados recebidos:', { clienteId, ownerId, selectedProfissional });
+  
+  const { hasPendingAppointments, pendingAppointmentIds } = usePendingAppointments({
+    clienteId: clienteId || '',
+    ownerId,
+    profissionalId: selectedProfissional,
+    enabled: !!clienteId && !!selectedProfissional
+  });
   
   const selectedServicoData = servicos.find(s => s.id === selectedServico);
   const selectedProfissionalData = profissionais.find(p => p.id === selectedProfissional);
@@ -138,13 +150,33 @@ const ConfirmacaoAgendamento: React.FC<ConfirmacaoAgendamentoProps> = ({
             </div>
           </div>
           
-          <Button 
-            onClick={onConfirmar}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold hover:opacity-90"
-          >
-            {loading ? 'Processando...' : 'Confirmar Agendamento'}
-          </Button>
+          {hasPendingAppointments ? (
+            <div className="space-y-3">
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                <p className="text-red-400 text-sm font-medium mb-1">
+                  ⚠️ Agendamentos Pendentes
+                </p>
+                <p className="text-gray-300 text-sm">
+                  Você possui agendamentos pendentes com este profissional. 
+                  Faça o pagamento ou cancele para continuar agendando.
+                </p>
+              </div>
+              <Button 
+                disabled={true}
+                className="w-full bg-gray-600 text-gray-400 cursor-not-allowed"
+              >
+                Confirmar Agendamento
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              onClick={onConfirmar}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold hover:opacity-90"
+            >
+              {loading ? 'Processando...' : 'Confirmar Agendamento'}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

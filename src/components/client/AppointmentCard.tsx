@@ -328,8 +328,13 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
   };
 
   const paymentStatus = getPaymentStatus(agendamento.pagamentos);
+  
+  // Lógica de cancelamento para agendamentos confirmados (mantém regra de 2 dias)
   const canCancel = !agendamento.isPacoteMensal && canCancelAppointment(agendamento.data_hora) && 
                    (agendamento.status === 'agendado' || agendamento.status === 'confirmado');
+  
+  // Para agendamentos pendentes, sempre permitir cancelamento (independente do prazo e tipo)
+  const canCancelPending = agendamento.status === 'pendente';
 
   // Mostrar formulário de cartão se solicitado (para agendamentos normais e pacotes mensais)
   if (showCardForm) {
@@ -366,7 +371,7 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
               </CardTitle>
               <div className="flex items-center gap-2">
                 {getStatusBadge(agendamento.status, agendamento.pagamentos)}
-                {canCancel && (
+                {(canCancel || canCancelPending) && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -455,6 +460,22 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
                     >
                       <CreditCard className="h-4 w-4 mr-2" />
                       Cartão
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onCancel(agendamento.id)}
+                      disabled={isCancelling}
+                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                    >
+                      {isCancelling ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                      ) : (
+                        <>
+                          <X className="h-4 w-4 mr-1" />
+                          Cancelar
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -635,6 +656,22 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
                       <CreditCard className="h-4 w-4 mr-2" />
                       Cartão
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onCancel(agendamento.id)}
+                      disabled={isCancelling}
+                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                    >
+                      {isCancelling ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                      ) : (
+                        <>
+                          <X className="h-4 w-4 mr-1" />
+                          Cancelar
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
                 <p className="text-xs text-yellow-400 mt-2">
@@ -715,12 +752,14 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
               </div>
             )}
 
-            {/* Mensagem específica para pacotes mensais */}
-            <div className="text-xs text-purple-300 bg-purple-900/20 p-3 rounded border-l-4 border-purple-500">
-              📦 Pacote mensal não pode ser cancelado pelo cliente
-              <br />
-              ℹ️ Em caso de imprevisto, entrar em contato com o profissional
-            </div>
+            {/* Mensagem específica para pacotes mensais - apenas se não for pendente */}
+            {agendamento.status !== 'pendente' && (
+              <div className="text-xs text-purple-300 bg-purple-900/20 p-3 rounded border-l-4 border-purple-500">
+                📦 Pacote mensal confirmado não pode ser cancelado pelo cliente
+                <br />
+                ℹ️ Em caso de imprevisto, entrar em contato com o profissional
+              </div>
+            )}
           </CardContent>
         </Card>
       </>
@@ -819,7 +858,7 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
             </CardTitle>
             <div className="flex items-center gap-3">
               {getStatusBadge(agendamento.status, agendamento.pagamentos)}
-              {canCancel && (
+              {(canCancel || canCancelPending) && (
                 <Button               
                   variant="outline"
                   size="sm"
