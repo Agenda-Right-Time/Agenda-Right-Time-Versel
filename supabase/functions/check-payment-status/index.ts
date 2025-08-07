@@ -28,7 +28,7 @@ serve(async (req) => {
       })
     }
 
-    // Buscar pagamento pendente MAIS RECENTE deste agendamento
+    // Buscar pagamento pendente MAIS RECENTE deste agendamento ESPECÍFICO
     const { data: pagamentos, error: pagamentoError } = await supabaseClient
       .from('pagamentos')
       .select('*')
@@ -87,21 +87,22 @@ serve(async (req) => {
 
     console.log('🔍 Buscando pagamentos na API do Mercado Pago...')
     console.log('💰 Valor esperado:', pagamento.valor)
+    console.log('🆔 Agendamento ID:', agendamentoId)
 
-    // Buscar APENAS nos últimos 15 segundos com margem de segurança
-    const agora15SegsAtras = new Date(agora.getTime() - 15000) // 15 segundos atrás
-    const agoraFuturo = new Date(agora.getTime() + 2000) // 2 segundos no futuro para compensar delay
+    // Buscar nos últimos 5 MINUTOS (aumentado de 15 segundos)
+    const agora5MinAtras = new Date(agora.getTime() - 300000) // 5 minutos atrás
+    const agoraFuturo = new Date(agora.getTime() + 10000) // 10 segundos no futuro para compensar delay
 
-    console.log('🕐 Janela de busca: últimos 15 segundos')
-    console.log('📅 De:', agora15SegsAtras.toISOString())
+    console.log('🕐 Janela de busca: últimos 5 minutos')
+    console.log('📅 De:', agora5MinAtras.toISOString())
     console.log('📅 Até:', agoraFuturo.toISOString())
 
-    // Buscar pagamentos na API do Mercado Pago APENAS dos últimos 15 segundos
+    // Buscar pagamentos na API do Mercado Pago dos últimos 5 MINUTOS
     const searchUrl = new URL('https://api.mercadopago.com/v1/payments/search')
     searchUrl.searchParams.append('sort', 'date_created')
     searchUrl.searchParams.append('criteria', 'desc')
-    searchUrl.searchParams.append('limit', '50') // Aumentar limite para garantir que capture o pagamento
-    searchUrl.searchParams.append('begin_date', agora15SegsAtras.toISOString())
+    searchUrl.searchParams.append('limit', '100')
+    searchUrl.searchParams.append('begin_date', agora5MinAtras.toISOString())
     searchUrl.searchParams.append('end_date', agoraFuturo.toISOString())
     searchUrl.searchParams.append('status', 'approved') // Buscar apenas pagamentos aprovados
     
@@ -127,35 +128,58 @@ serve(async (req) => {
     }
 
     const searchData = await searchResponse.json()
-    console.log('📊 Total pagamentos encontrados nos últimos 15 segundos:', searchData.results?.length || 0)
+    console.log('📊 Total pagamentos encontrados nos últimos 5 minutos:', searchData.results?.length || 0)
 
     // Procurar pagamento com VALOR EXATO
     let pagamentoEncontrado = null
     const valorEsperado = Number(pagamento.valor)
+    
+    console.log('📝 Detalhes da busca:')
+    console.log(`   - Agendamento ID: ${agendamentoId}`)
+    console.log(`   - Valor buscado: R$ ${valorEsperado}`)
+    console.log(`   - Pagamento ID no DB: ${pagamento.id}`)
+    console.log(`   - Status do pagamento no DB: ${pagamento.status}`)
 
     if (searchData.results && searchData.results.length > 0) {
       for (const p of searchData.results) {
         const valorPagamento = Number(p.transaction_amount)
         const isApproved = p.status === 'approved'
         const isPix = p.payment_method_id === 'pix'
+        const isCard = p.payment_type_id === 'credit_card' || p.payment_type_id === 'debit_card'
         // Permitir pequena diferença de centavos devido a arredondamentos
         const valorExato = Math.abs(valorPagamento - valorEsperado) < 0.01
         
-        console.log(`🔍 Pagamento MP: ID=${p.id}, Valor=${valorPagamento}, Status=${p.status}, Método=${p.payment_method_id}, Data=${p.date_created}`)
-        console.log(`🎯 Critérios: Aprovado=${isApproved}, PIX=${isPix}, ValorExato=${valorExato} (esperado=${valorEsperado}, diferença=${Math.abs(valorPagamento - valorEsperado)})`)
+        console.log(`🔍 Pagamento MP: ID=${p.id}, Valor=${valorPagamento}, Status=${p.status}, Método=${p.payment_method_id}, Tipo=${p.payment_type_id}, Parcelas=${p.installments || 1}, Data=${p.date_created}`)
+        console.log(`🎯 Critérios: Aprovado=${isApproved}, PIX=${isPix}, Cartão=${isCard}, ValorExato=${valorExato} (esperado=${valorEsperado}, diferença=${Math.abs(valorPagamento - valorEsperado)})`)
         
-        // CRITÉRIOS RÍGIDOS: Aprovado + PIX + Valor EXATO (com tolerância de centavos)
-        if (isApproved && isPix && valorExato) {
-          pagamentoEncontrado = p
-          console.log(`✅ PAGAMENTO VÁLIDO ENCONTRADO! ID=${p.id}, Valor: ${valorPagamento}`)
-          break
+        // CRITÉRIOS: Aprovado + (PIX OU CARTÃO) + Valor EXATO
+        // PRIORIDADE 1: Pagamentos com external_reference ou metadata corretos
+        // PRIORIDADE 2: Pagamentos com valor exato (fallback para pagamentos sem referência)
+        const hasCorrectReference = p.external_reference === agendamentoId;
+        const hasCorrectMetadata = p.metadata?.agendamento_id === agendamentoId;
+        console.log(`🎯 External Reference: ${p.external_reference} === ${agendamentoId} = ${hasCorrectReference}`);
+        console.log(`🎯 Metadata Check: ${p.metadata?.agendamento_id} === ${agendamentoId} = ${hasCorrectMetadata}`);
+        
+        if (isApproved && (isPix || isCard) && valorExato) {
+          // PRIORIDADE 1: Com referência correta (mais seguro)
+          if (hasCorrectReference || hasCorrectMetadata) {
+            pagamentoEncontrado = p
+            console.log(`✅ PAGAMENTO VÁLIDO COM REFERÊNCIA! ID=${p.id}, Valor: ${valorPagamento}, Método: ${isPix ? 'PIX' : 'CARTÃO'}, Parcelas: ${p.installments || 1}, Ref: ${p.external_reference}`)
+            break
+          }
+          // PRIORIDADE 2: Sem referência mas valor exato (fallback)
+          else if (!pagamentoEncontrado) {
+            pagamentoEncontrado = p
+            console.log(`✅ PAGAMENTO ENCONTRADO POR VALOR! ID=${p.id}, Valor: ${valorPagamento}, Método: ${isPix ? 'PIX' : 'CARTÃO'}, Parcelas: ${p.installments || 1}`)
+            // Não quebra aqui - continua procurando um com referência correta
+          }
         }
       }
 
       if (pagamentoEncontrado) {
         console.log('✅ Processando confirmação do pagamento...')
         
-        // Atualizar pagamento para pago
+        // Atualizar APENAS o pagamento ESPECÍFICO deste agendamento
         const { error: updatePaymentError } = await supabaseClient
           .from('pagamentos')
           .update({
@@ -163,6 +187,7 @@ serve(async (req) => {
             updated_at: new Date().toISOString()
           })
           .eq('id', pagamento.id)
+          .eq('agendamento_id', agendamentoId) // GARANTIR que é o pagamento correto
 
         if (updatePaymentError) {
           console.error('❌ Erro ao atualizar pagamento:', updatePaymentError)
@@ -278,25 +303,26 @@ serve(async (req) => {
           status: 'confirmed',
           message: 'Pagamento confirmado!',
           payment_id: pagamentoEncontrado.id,
-          amount: pagamentoEncontrado.transaction_amount
+          amount: pagamentoEncontrado.transaction_amount,
+          reference_type: (pagamentoEncontrado.external_reference === agendamentoId || pagamentoEncontrado.metadata?.agendamento_id === agendamentoId) ? 'reference_match' : 'value_match'
         }), {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
       } else {
-        console.log('❌ Nenhum pagamento com valor exato encontrado nos últimos 15 segundos')
+        console.log('❌ Nenhum pagamento com valor exato encontrado nos últimos 5 minutos')
         console.log(`💰 Valor esperado: R$ ${valorEsperado}`)
         
         if (searchData.results.length > 0) {
           console.log('📋 Pagamentos encontrados:')
           searchData.results.forEach(p => {
-            console.log(`  - ID: ${p.id}, Valor: R$ ${p.transaction_amount}, Status: ${p.status}`)
+            console.log(`  - ID: ${p.id}, Valor: R$ ${p.transaction_amount}, Status: ${p.status}, Método: ${p.payment_method_id}, Tipo: ${p.payment_type_id}, Parcelas: ${p.installments || 1}, Ref: ${p.external_reference}`)
           })
         }
         
         return new Response(JSON.stringify({ 
           status: 'not_found',
-          message: 'Nenhum pagamento com valor exato encontrado nos últimos 15 segundos',
+          message: 'Nenhum pagamento encontrado nos últimos 5 minutos',
           expected_value: valorEsperado,
           payments_found: searchData.results.length
         }), {
@@ -305,10 +331,10 @@ serve(async (req) => {
         })
       }
     } else {
-      console.log('❌ Nenhum pagamento encontrado nos últimos 15 segundos')
+      console.log('❌ Nenhum pagamento encontrado nos últimos 5 minutos')
       return new Response(JSON.stringify({ 
         status: 'no_payments',
-        message: 'Nenhum pagamento encontrado nos últimos 15 segundos'
+        message: 'Nenhum pagamento encontrado nos últimos 5 minutos'
       }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

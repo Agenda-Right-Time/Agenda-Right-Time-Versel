@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ClientAppointments from './ClientAppointments';
 import EstablishmentProfile from './EstablishmentProfile';
+import { usePaymentHeartbeat } from '@/hooks/usePaymentHeartbeat';
+import { usePaymentRecovery } from '@/hooks/usePaymentRecovery';
 
 interface ClientDashboardProps {
   ownerId: string;
@@ -22,6 +24,30 @@ const ClientDashboard = ({ ownerId, onNewAppointment }: ClientDashboardProps) =>
   const { user, signOut } = useClientOnlyAuth(ownerId);
   const { toast } = useToast();
   const [empresaSlug, setEmpresaSlug] = useState<string>('');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Heartbeat global para monitorar pagamentos
+  usePaymentHeartbeat({
+    enabled: true,
+    onPaymentFound: () => {
+      console.log('💓 Heartbeat detectou pagamento confirmado');
+      setRefreshTrigger(prev => prev + 1);
+    }
+  });
+
+  // Recovery de pagamentos perdidos
+  usePaymentRecovery({
+    enabled: true,
+    ownerId: ownerId,
+    onRecoveredPayment: (agendamentoId) => {
+      console.log('🔄 Pagamento recuperado:', agendamentoId);
+      toast({
+        title: "Pagamento Confirmado!",
+        description: "Um pagamento foi confirmado automaticamente.",
+      });
+      setRefreshTrigger(prev => prev + 1);
+    }
+  });
 
   // Variáveis computadas após hooks
   const activeTab = searchParams.get('tab') || 'meus-agendamentos';
@@ -164,6 +190,7 @@ const ClientDashboard = ({ ownerId, onNewAppointment }: ClientDashboardProps) =>
           <TabsContent value="meus-agendamentos" className="mt-6">
             <ClientAppointments 
               ownerId={ownerId}
+              refreshTrigger={refreshTrigger}
             />
           </TabsContent>
           

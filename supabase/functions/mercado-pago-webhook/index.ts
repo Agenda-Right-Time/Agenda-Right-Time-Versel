@@ -114,78 +114,35 @@ serve(async (req) => {
 
           let pagamento = null;
 
-          // Primeiro, tentar encontrar por external_reference (pagamentos de cartão)
-          if (paymentData.external_reference) {
-            console.log('🔍 Searching payment by agendamento_id from external_reference...')
+          // BUSCA ESPECÍFICA: Por external_reference OU metadata
+          const agendamentoIdFromRef = paymentData.external_reference;
+          const agendamentoIdFromMetadata = paymentData.metadata?.agendamento_id;
+          
+          if (agendamentoIdFromRef || agendamentoIdFromMetadata) {
+            const targetAgendamentoId = agendamentoIdFromRef || agendamentoIdFromMetadata;
+            console.log('🔍 Searching payment by specific agendamento_id:', targetAgendamentoId)
             
             const { data: pagamentoByRef, error: refError } = await supabaseClient
               .from('pagamentos')
               .select('*')
-              .eq('agendamento_id', paymentData.external_reference)
+              .eq('agendamento_id', targetAgendamentoId)
               .eq('status', 'pendente')
               .single()
 
             if (!refError && pagamentoByRef) {
-              console.log('✅ Found payment by external_reference:', pagamentoByRef.id)
+              console.log('✅ Found payment by agendamento reference:', pagamentoByRef.id)
               pagamento = pagamentoByRef
             } else {
-              console.log('ℹ️ No payment found by external_reference')
+              console.log('ℹ️ No payment found by agendamento reference')
             }
           }
 
-          // Se não encontrou por external_reference, usar estratégia anterior (buscar por valor)
+          // Se não encontrou pela referência específica, NÃO buscar por valor genérico
+          // REMOVIDO: busca genérica por valor que causava confirmações errôneas
           if (!pagamento) {
-            console.log('🔍 Searching for ALL pending payments by amount...')
-            
-            const { data: allPendingPayments, error: searchError } = await supabaseClient
-              .from('pagamentos')
-              .select('*')
-              .eq('status', 'pendente')
-              .order('created_at', { ascending: false })
-
-            if (searchError) {
-              console.error('❌ Error searching payments:', searchError)
-              return new Response('OK', { status: 200 })
-            }
-
-            console.log('📋 Found pending payments:', allPendingPayments?.length || 0)
-            
-            if (allPendingPayments && allPendingPayments.length > 0) {
-              console.log('💰 All pending payments:', allPendingPayments.map(p => ({ 
-                id: p.id, 
-                valor: p.valor, 
-                agendamento_id: p.agendamento_id,
-                created_at: p.created_at,
-                expires_at: p.expires_at
-              })))
-
-              // Buscar correspondência exata primeiro
-              pagamento = allPendingPayments.find(p => {
-                const diff = Math.abs(Number(p.valor) - paymentData.transaction_amount)
-                console.log(`💰 Exact match check: DB=${p.valor}, MP=${paymentData.transaction_amount}, diff=${diff}`)
-                return diff < 0.01
-              })
-              
-              // Se não encontrou exato, buscar por aproximação (até R$ 5.00 de diferença)
-              if (!pagamento) {
-                console.log('🔍 Trying approximate match (within R$ 5.00)...')
-                pagamento = allPendingPayments.find(p => {
-                  const diff = Math.abs(Number(p.valor) - paymentData.transaction_amount)
-                  console.log(`💰 Approximate match check: DB=${p.valor}, MP=${paymentData.transaction_amount}, diff=${diff}`)
-                  return diff <= 5.0
-                })
-              }
-
-              // Se ainda não encontrou, pegar o mais recente não expirado
-              if (!pagamento) {
-                const now = new Date()
-                const notExpired = allPendingPayments.filter(p => new Date(p.expires_at) > now)
-                if (notExpired.length > 0) {
-                  pagamento = notExpired[0]
-                  console.log('⚠️ Using most recent non-expired payment as fallback:', pagamento.id)
-                }
-              }
-            }
+            console.log('❌ Payment not found by specific agendamento reference')
+            console.log('🚫 Skipping generic value search to prevent wrong confirmations')
+            console.log('💡 Payment must have correct external_reference or metadata.agendamento_id')
           }
 
           if (pagamento) {

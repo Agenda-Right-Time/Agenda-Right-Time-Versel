@@ -25,6 +25,19 @@ const MercadoPagoSettings = () => {
     }
   }, [user?.id]);
 
+  // Carregar valores temporários salvos ao montar o componente (ANTES do loadConfiguration)
+  useEffect(() => {
+    const savedPublicKey = localStorage.getItem('mp_public_key_temp');
+    const savedAccessToken = localStorage.getItem('mp_access_token_temp');
+    
+    if (savedPublicKey) {
+      setPublicKey(savedPublicKey);
+    }
+    if (savedAccessToken) {
+      setAccessToken(savedAccessToken);
+    }
+  }, []);
+
   const loadConfiguration = async () => {
     if (!user?.id) return;
 
@@ -42,15 +55,33 @@ const MercadoPagoSettings = () => {
         throw error;
       }
 
+      // Verificar se há valores temporários salvos - NÃO sobrescrever se existirem
+      const savedPublicKey = localStorage.getItem('mp_public_key_temp');
+      const savedAccessToken = localStorage.getItem('mp_access_token_temp');
+
       if (data) {
         console.log('Configuration loaded:', { hasToken: !!data.mercado_pago_access_token, hasKey: !!data.mercado_pago_public_key });
-        setAccessToken(data.mercado_pago_access_token || '');
-        setPublicKey(data.mercado_pago_public_key || '');
+        
+        // Só usar os dados do banco se NÃO houver valores temporários
+        if (!savedAccessToken) {
+          setAccessToken(data.mercado_pago_access_token || '');
+        }
+        if (!savedPublicKey) {
+          setPublicKey(data.mercado_pago_public_key || '');
+        }
+        
         setIsConfigured(!!(data.mercado_pago_access_token && data.mercado_pago_public_key));
       } else {
         console.log('No configuration found');
-        setAccessToken('');
-        setPublicKey('');
+        
+        // Só limpar se NÃO houver valores temporários
+        if (!savedAccessToken) {
+          setAccessToken('');
+        }
+        if (!savedPublicKey) {
+          setPublicKey('');
+        }
+        
         setIsConfigured(false);
       }
     } catch (error) {
@@ -135,6 +166,11 @@ const MercadoPagoSettings = () => {
 
       console.log('Configuration saved successfully:', data);
       setIsConfigured(true);
+      
+      // Limpar os valores temporários do localStorage após salvar com sucesso
+      localStorage.removeItem('mp_access_token_temp');
+      localStorage.removeItem('mp_public_key_temp');
+      
       toast({
         title: "Configuração salva! 🎉",
         description: "Sua conta do Mercado Pago foi configurada com sucesso."
@@ -326,7 +362,16 @@ const MercadoPagoSettings = () => {
             <Input
               id="publicKey"
               value={publicKey}
-              onChange={(e) => setPublicKey(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setPublicKey(value);
+                // Salvar temporariamente no localStorage
+                if (value) {
+                  localStorage.setItem('mp_public_key_temp', value);
+                } else {
+                  localStorage.removeItem('mp_public_key_temp');
+                }
+              }}
               placeholder="Ex: APP_USR-abcd1234-ef56-7890-abcd-123456789012"
               className="bg-gray-800 border-gray-600 mt-1"
             />
@@ -341,7 +386,16 @@ const MercadoPagoSettings = () => {
               id="accessToken"
               type="password"
               value={accessToken}
-              onChange={(e) => setAccessToken(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setAccessToken(value);
+                // Salvar temporariamente no localStorage
+                if (value) {
+                  localStorage.setItem('mp_access_token_temp', value);
+                } else {
+                  localStorage.removeItem('mp_access_token_temp');
+                }
+              }}
               placeholder="Ex: APP_USR-1234567890123456-012345-abcdef1234567890abcdef1234567890-12345678"
               className="bg-gray-800 border-gray-600 mt-1"
             />

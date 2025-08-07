@@ -51,10 +51,27 @@ export const usePaymentStatus = ({
 
       console.log('📅 Agendamento status:', agendamento.status);
 
-      // Se já está confirmado, marcar como pago
+      // Se já está confirmado, marcar como pago e PARAR monitoramento
       if (agendamento.status === 'confirmado') {
-        console.log('✅ Agendamento já confirmado no banco');
+        console.log('✅ Agendamento já confirmado no banco - PARANDO MONITORAMENTO');
         setPaymentStatus('pago');
+        
+        // PARAR completamente o monitoramento
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        
+        if (channelRef.current && isSubscribedRef.current) {
+          try {
+            supabase.removeChannel(channelRef.current);
+          } catch (error) {
+            console.warn('Error removing channel:', error);
+          }
+          channelRef.current = null;
+          isSubscribedRef.current = false;
+        }
+        
         if (onPaymentConfirmed && !callbackExecutedRef.current) {
           console.log('🎉 Calling onPaymentConfirmed callback');
           callbackExecutedRef.current = true;
@@ -79,8 +96,24 @@ export const usePaymentStatus = ({
       const pagamentoRejeitado = pagamentos?.find(p => p.status === 'rejeitado');
       
       if (pagamentoPago) {
-        console.log('✅ Payment found as PAID locally');
+        console.log('✅ Payment found as PAID locally - PARANDO MONITORAMENTO');
         setPaymentStatus('pago');
+        
+        // PARAR completamente o monitoramento
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        
+        if (channelRef.current && isSubscribedRef.current) {
+          try {
+            supabase.removeChannel(channelRef.current);
+          } catch (error) {
+            console.warn('Error removing channel:', error);
+          }
+          channelRef.current = null;
+          isSubscribedRef.current = false;
+        }
         
         if (onPaymentConfirmed && !callbackExecutedRef.current) {
           console.log('🎉 Calling onPaymentConfirmed callback');
@@ -110,8 +143,8 @@ export const usePaymentStatus = ({
         } else {
           setPaymentStatus('pendente');
           
-          // SEMPRE chamar API do Mercado Pago para buscar pagamentos dos últimos 15 segundos
-          console.log('🔍 Calling MP API to check for payments in last 15 seconds...');
+          // SEMPRE chamar API do Mercado Pago para buscar pagamentos dos últimos 5 minutos
+          console.log('🔍 Calling MP API to check for payments in last 5 minutes...');
           
           try {
             const { data: apiResponse, error: apiError } = await supabase.functions.invoke('check-payment-status', {
@@ -131,7 +164,7 @@ export const usePaymentStatus = ({
                 // A função já atualizou o banco, aguardar um pouco e verificar novamente
                 setTimeout(() => checkPaymentStatus(), 500);
               } else {
-                console.log('⏳ No payment found in last 15 seconds, continuing to monitor...');
+                console.log('⏳ No payment found in last 5 minutes, continuing to monitor...');
               }
             }
           } catch (error) {

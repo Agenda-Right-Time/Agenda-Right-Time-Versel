@@ -43,9 +43,10 @@ interface Agendamento {
 
 interface ClientAppointmentsProps {
   ownerId: string;
+  refreshTrigger?: number;
 }
 
-const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
+const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps) => {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState<string | null>(null);
@@ -107,7 +108,7 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
           pagamentos(status, valor)
         `)
         .eq('user_id', ownerId)
-        .in('status', ['confirmado', 'agendado', 'pendente']) // Excluir agendamentos cancelados
+        .in('status', ['confirmado', 'agendado', 'pendente', 'concluido']) // Incluir concluidos para pacotes mensais
         .gte('data_hora', dataAtual)
         .order('data_hora', { ascending: true });
 
@@ -194,15 +195,18 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
             if (sessoesPendentes > 0 || sessoesCanceladas > 0 || sessoesConcluidas > 0) {
               const valorTotal = agendamentosPacote.reduce((total, a) => total + (a.valor || 0), 0);
               
-              // Determinar status do pacote baseado nos pagamentos das sessões ATIVAS (não canceladas/concluídas)
+              // Determinar status do pacote baseado nos pagamentos de QUALQUER sessão do pacote
+              // CORREÇÃO: Verificar pagamento em TODAS as sessões, não apenas as ativas
+              const hasPaidPayment = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
+              const hasPendingPayment = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
+              
+              // Filtrar sessões ativas apenas para exibição
               const sessoesAtivas = agendamentosPacote.filter(a => 
                 a.status !== 'cancelado' && a.status !== 'concluido'
               );
-              const hasPaidPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
-              const hasPendingPayment = sessoesAtivas.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
               
               let pacoteStatus = 'agendado';
-              if (hasPaidPayment) {
+              if (hasPaidPayment || sessoesAtivas.some(a => a.status === 'confirmado')) {
                 pacoteStatus = 'confirmado';
               } else if (hasPendingPayment) {
                 pacoteStatus = 'pendente';
@@ -276,7 +280,7 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
     } finally {
       setLoading(false);
     }
-  }, [ownerId, clientProfile]); // Dependências sem loop infinito
+  }, [ownerId, clientProfile, refreshTrigger]); // Dependências sem loop infinito
 
   // Unificando todos os useEffect em um só para evitar conflitos
   useEffect(() => {
@@ -309,10 +313,10 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
           (payload) => {
             console.log('🔄 Mudança em agendamento detectada:', payload);
             if (mounted) {
-              // Debounce para evitar múltiplas chamadas
+              // Atualização IMEDIATA quando o agendamento muda
               setTimeout(() => {
                 if (mounted) fetchAgendamentos();
-              }, 3000);
+              }, 500); // Reduzido de 3000ms para 500ms
             }
           }
         )
@@ -326,10 +330,10 @@ const ClientAppointments = ({ ownerId }: ClientAppointmentsProps) => {
           (payload) => {
             console.log('🔄 Mudança em pagamento detectada:', payload);
             if (mounted) {
-              // Debounce para evitar múltiplas chamadas
+              // Atualização IMEDIATA quando pagamento muda
               setTimeout(() => {
                 if (mounted) fetchAgendamentos();
-              }, 3000);
+              }, 500); // Reduzido de 3000ms para 500ms
             }
           }
         )

@@ -54,6 +54,54 @@ const AppointmentsManager = () => {
     fetchServices();
     fetchClients();
     fetchProfessionals();
+
+    // ADICIONAR: Sistema de atualização em tempo real para agendamentos
+    const setupRealtimeSubscription = async () => {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) return null;
+
+      const channel = supabase
+        .channel('appointments-realtime')
+        .on('postgres_changes', 
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'agendamentos',
+            filter: `user_id=eq.${user.id}`
+          }, 
+          (payload) => {
+            console.log('🔄 Agendamento alterado em tempo real:', payload);
+            // Recarregar dados quando houver mudanças
+            fetchAppointments();
+          }
+        )
+        .on('postgres_changes', 
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'pagamentos'
+          }, 
+          (payload) => {
+            console.log('💰 Pagamento alterado em tempo real:', payload);
+            // Recarregar dados quando houver mudanças nos pagamentos
+            fetchAppointments();
+          }
+        )
+        .subscribe();
+
+      return channel;
+    };
+
+    let channel: any = null;
+    setupRealtimeSubscription().then(ch => {
+      channel = ch;
+    });
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   // Recarregar quando filtros mudarem
@@ -127,7 +175,7 @@ const AppointmentsManager = () => {
           pagamentos!inner(id, status, expires_at)
         `)
           .eq('user_id', (await supabase.auth.getUser()).data.user?.id) // FILTRAR POR PROFISSIONAL ATUAL
-          .eq('status', 'pendente');
+          .eq('status', 'pendente'); // APENAS agendamentos que JÁ ESTÃO pendentes
 
       if (fetchError) {
         console.error('❌ Error fetching pending appointments:', fetchError);
@@ -136,6 +184,11 @@ const AppointmentsManager = () => {
 
       const now = new Date();
       const expiredAppointments = pendingAppointments?.filter(appointment => {
+        // CRÍTICO: NÃO TOCAR EM AGENDAMENTOS CONCLUÍDOS OU CONFIRMADOS
+        if (appointment.status === 'concluido' || appointment.status === 'confirmado') {
+          return false;
+        }
+        
         const hasExpiredPayment = appointment.pagamentos.some(payment => 
           payment.status === 'pendente' && new Date(payment.expires_at) < now
         );
@@ -182,7 +235,7 @@ const AppointmentsManager = () => {
           *,
           servicos(nome, preco, duracao),
           profissionais(nome),
-          pagamentos(status, valor)
+          pagamentos(status, valor, preference_id, pix_code, agendamento_id)
         `)
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id) // FILTRAR POR PROFISSIONAL ATUAL
       .not('status', 'eq', 'cancelado')
@@ -220,41 +273,74 @@ const AppointmentsManager = () => {
         const isPacoteMensal = appointment.observacoes?.includes('PACOTE MENSAL');
         
         if (isPacoteMensal) {
-          // Agendamentos cancelados já foram filtrados na query, não chegam aqui
-          
-          // Para pacotes mensais, buscar pagamentos de QUALQUER agendamento do mesmo pacote
+          // Para pacotes mensais, buscar TODOS os agendamentos do mesmo pacote
           const pacoteId = appointment.observacoes?.match(/PACOTE MENSAL (PMT\d+)/)?.[1] || '';
-          const agendamentosMesmoPacote = normalAppointments?.filter(a => 
-            a.observacoes?.includes(pacoteId)
-          ) || [];
           
-          // Verificar se há pagamentos em QUALQUER agendamento do pacote
-          const todosOsPagamentos = agendamentosMesmoPacote.flatMap(a => a.pagamentos || []);
-          const hasPendingPayment = todosOsPagamentos.some((p: any) => p.status === 'pendente');
-          const hasPaidPayment = todosOsPagamentos.some((p: any) => p.status === 'pago');
+          // BUSCAR TODOS os agendamentos do pacote para verificar se há pagamento
+          const agendamentosDoPacote = (normalAppointments || []).filter(a => 
+            a.observacoes?.includes(`PACOTE MENSAL ${pacoteId}`)
+          );
+          
+          // Verificar se QUALQUER agendamento do pacote tem pagamento
+          const temPagamentoPacote = agendamentosDoPacote.some(a => 
+            a.pagamentos?.some((p: any) => p.status === 'pago')
+          );
+          
+          const temPagamentoPendentePacote = agendamentosDoPacote.some(a => 
+            a.pagamentos?.some((p: any) => p.status === 'pendente')
+          );
+          
+          console.log('🔍 [PACOTE DEBUG] Verificando pacote completo:', {
+            pacoteId,
+            agendamentoId: appointment.id,
+            sequencia: appointment.observacoes?.match(/Sessão (\d+)\/4/)?.[1],
+            statusOriginal: appointment.status,
+            totalAgendamentosPacote: agendamentosDoPacote.length,
+            temPagamentoPacote,
+            temPagamentoPendentePacote
+          });
           
           let displayStatus = 'agendado';
           let realStatus = appointment.status;
           let valorPago = appointment.valor_pago || 0;
           
-          // Determinar status baseado nos pagamentos do pacote completo
-          // IMPORTANTE: Não sobrescrever status "concluido"
+          // CRÍTICO: Status "concluido" e "cancelado" NUNCA devem ser sobrescritos
           if (appointment.status === 'concluido') {
+            console.log('🏁 [PACOTE] Mantendo status CONCLUÍDO para:', { agendamentoId: appointment.id, pacoteId });
             displayStatus = 'concluido';
             realStatus = 'concluido';
             valorPago = appointment.valor; // 100% pago se concluído
-          } else if (hasPaidPayment || appointment.status === 'confirmado') {
-            displayStatus = 'agendado';
-            realStatus = 'confirmado';
-            valorPago = appointment.valor; // 100% pago se confirmado
-          } else if (hasPendingPayment) {
-            displayStatus = 'pendente';
-            realStatus = 'pendente';
-            valorPago = 0; // 0% pago se pendente
           } else if (appointment.status === 'cancelado') {
+            console.log('❌ [PACOTE] Mantendo status CANCELADO para:', { agendamentoId: appointment.id, pacoteId });
             displayStatus = 'cancelado';
             realStatus = 'cancelado';
             valorPago = 0; // 0% pago se cancelado
+          } else if (temPagamentoPacote || appointment.status === 'confirmado') {
+            // Se QUALQUER sessão do pacote foi paga OU status já é confirmado
+            console.log('💰 [PACOTE] Pacote foi pago ou já confirmado, definindo como AGENDADO:', { 
+              agendamentoId: appointment.id, 
+              pacoteId,
+              temPagamentoPacote,
+              statusConfirmado: appointment.status === 'confirmado'
+            });
+            displayStatus = 'agendado';
+            realStatus = appointment.status === 'concluido' ? 'concluido' : 'confirmado';
+            valorPago = appointment.valor; // 100% pago se confirmado
+          } else if (temPagamentoPendentePacote) {
+            // PAGAMENTO PENDENTE no pacote
+            console.log('⏳ [PACOTE] Pagamento pendente no pacote, definindo como PENDENTE:', { 
+              agendamentoId: appointment.id, 
+              pacoteId
+            });
+            displayStatus = 'pendente';
+            realStatus = 'pendente';
+            valorPago = 0; // 0% pago se pendente
+          } else {
+            // SEM PAGAMENTOS - agendamento livre
+            console.log('🆓 [PACOTE] Sem pagamentos no pacote, definindo como AGENDADO:', { agendamentoId: appointment.id, pacoteId });
+            displayStatus = 'agendado';
+            realStatus = appointment.status;
+            valorPago = appointment.valor_pago || 0;
           }
           
           return {

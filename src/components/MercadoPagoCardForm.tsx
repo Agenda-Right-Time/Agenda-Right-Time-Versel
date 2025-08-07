@@ -37,6 +37,8 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
 }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [localPaymentStatus, setLocalPaymentStatus] = useState<'pendente' | 'pago' | 'rejeitado'>('pendente');
+  const [userWantsToRetry, setUserWantsToRetry] = useState(false);
   const [holderName, setHolderName] = useState('');
   const [email, setEmail] = useState('');
   const [docType, setDocType] = useState('CPF');
@@ -54,6 +56,7 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
     ownerId,
     onPaymentConfirmed: () => {
       console.log('🎉 Payment confirmed! Redirecting to dashboard...');
+      setLocalPaymentStatus('pago');
       toast({
         title: "Pagamento confirmado! 🎉",
         description: "Redirecionando para seus agendamentos...",
@@ -66,8 +69,14 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
         navigate(`/agendamento?owner=${ownerId}&dashboard&tab=meus-agendamentos`);
       }, 2000);
     },
-    enabled: true
+    enabled: localPaymentStatus === 'pendente'
   });
+
+  // Lógica do status: 
+  // 1. Se usuário quer tentar novamente, forçar pendente
+  // 2. Se não, usar status local quando rejeitado, senão usar status do hook
+  const currentPaymentStatus = userWantsToRetry ? 'pendente' : 
+    (localPaymentStatus === 'rejeitado' ? 'rejeitado' : paymentStatus);
 
   useEffect(() => {
     const loadMercadoPagoScript = async () => {
@@ -262,6 +271,7 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
     }
 
     setIsProcessing(true);
+    setUserWantsToRetry(false); // Resetar flag quando inicia novo pagamento
 
     try {
       console.log('🔄 Iniciando processo de pagamento...');
@@ -337,6 +347,9 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
     } catch (error) {
       console.error('❌ Erro no pagamento:', error);
       
+      // Marcar como rejeitado quando há erro
+      setLocalPaymentStatus('rejeitado');
+      
       const errorMessage = error instanceof Error ? error.message : 'Erro ao processar pagamento';
       toast({
         title: "Erro no pagamento",
@@ -349,7 +362,7 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
   };
 
   // Se o pagamento foi rejeitado, mostrar tela de erro
-  if (paymentStatus === 'rejeitado') {
+  if (currentPaymentStatus === 'rejeitado') {
     return (
       <Card className="bg-gray-900 border-gray-700">
         <CardHeader className="text-center">
@@ -367,7 +380,11 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
           </p>
           <div className="mt-4 space-y-2">
             <Button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                console.log('🔄 Reset: Voltando para formulário de pagamento');
+                setUserWantsToRetry(true);
+                setLocalPaymentStatus('pendente');
+              }}
               className="bg-blue-500 hover:bg-blue-600 text-white font-semibold"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -387,7 +404,7 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
   }
 
   // Se o pagamento foi confirmado, mostrar tela de sucesso
-  if (paymentStatus === 'pago') {
+  if (currentPaymentStatus === 'pago') {
     return (
       <Card className="bg-gray-900 border-gray-700">
         <CardHeader className="text-center">
@@ -466,7 +483,7 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
           )}
           
           {/* Status do agendamento após envio */}
-          {!isProcessing && paymentStatus === 'pendente' && (
+          {!isProcessing && currentPaymentStatus === 'pendente' && (
             <div className="mt-4 flex flex-col items-center gap-2">
               <div className="flex items-center gap-2">
                 {isChecking ? (

@@ -13,6 +13,8 @@ serve(async (req) => {
 
   try {
     console.log('🔄 Iniciando process-card-payment...');
+    console.log('📋 Method:', req.method);
+    console.log('📋 Headers:', Object.fromEntries(req.headers.entries()));
     
     // Use service role key for database operations (como no Stripe)
     const supabaseService = createClient(
@@ -61,6 +63,17 @@ serve(async (req) => {
 
     // Extrair dados do corpo da requisição
     console.log('📋 Extraindo dados da requisição...');
+    let requestBody;
+    try {
+      requestBody = await req.json()
+    } catch (jsonError) {
+      console.error('❌ Erro ao fazer parse do JSON:', jsonError);
+      return new Response(
+        JSON.stringify({ error: 'JSON inválido na requisição' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const { 
       agendamento_id, 
       owner_id, 
@@ -71,7 +84,7 @@ serve(async (req) => {
       identification_type,
       identification_number,
       installments = 1
-    } = await req.json()
+    } = requestBody
 
     console.log('📊 Dados recebidos:', {
       agendamento_id,
@@ -118,7 +131,7 @@ serve(async (req) => {
     // Buscar dados do agendamento
     const { data: agendamento, error: agendamentoError } = await supabaseService
       .from('agendamentos')
-      .select('id, data_hora, observacoes')
+      .select('*')
       .eq('id', agendamento_id)
       .single()
 
@@ -171,12 +184,30 @@ serve(async (req) => {
       pagamentoId = novoPagamento.id
     }
 
-    // Criar pagamento no Mercado Pago
+    // Converter valor para decimal e garantir valor mínimo para parcelamento
+    const transactionAmount = Number(payment_amount)
+    const minValueForInstallments = 5.00 // Valor mínimo do MP para parcelamento
+    
+    // Para parcelamento, garantir valor mínimo
+    if (installments > 1 && transactionAmount < minValueForInstallments) {
+      console.error(`❌ Valor muito baixo para parcelamento: R$ ${transactionAmount}. Mínimo: R$ ${minValueForInstallments}`)
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Valor mínimo para parcelamento não atingido',
+          message: `Valor mínimo para parcelamento é R$ ${minValueForInstallments.toFixed(2)}`
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Criar pagamento no Mercado Pago - formato correto para cartão
     const paymentData = {
-      transaction_amount: payment_amount,
+      transaction_amount: Number(transactionAmount.toFixed(2)), // Garantir 2 casas decimais
       token: card_token,
       description: `Agendamento ${agendamento_id}`,
-      installments: installments,
+      external_reference: agendamento_id,
+      installments: Number(installments), // Garantir que é número
       payer: {
         email: payer_email,
         identification: {
@@ -235,10 +266,67 @@ serve(async (req) => {
         })
         .eq('id', pagamentoId)
 
-      await supabaseService
-        .from('agendamentos')
-        .update({ status: 'confirmado' })
-        .eq('id', agendamento_id)
+      // Verificar se é um pacote mensal - verificar observações mais rigorosamente
+      const observacoes = agendamento.observacoes || '';
+      const isPacoteMensal = observacoes.includes('PACOTE MENSAL');
+      const pacoteIdMatch = observacoes.match(/(PMT\d+)/i);
+
+      console.log(`🔍 Observações: ${observacoes}`);
+      console.log(`📦 É pacote mensal? ${isPacoteMensal}`);
+      console.log(`🆔 Pacote ID: ${pacoteIdMatch ? pacoteIdMatch[1] : 'não encontrado'}`);
+
+      if (isPacoteMensal && pacoteIdMatch) {
+        const pacoteId = pacoteIdMatch[1];
+        console.log(`📦 Processando PACOTE MENSAL ${pacoteId} - atualizando todos os 4 agendamentos...`);
+        
+        // Buscar TODOS os agendamentos do pacote usando o MESMO padrão do PIX
+        const { data: pacoteAgendamentos, error: fetchPacoteError } = await supabaseService
+          .from('agendamentos')
+          .select('*')
+          .eq('user_id', agendamento.user_id)
+          .ilike('observacoes', `%PACOTE MENSAL ${pacoteId}%`)
+          .order('data_hora', { ascending: true })
+          
+        if (fetchPacoteError) {
+          console.error('❌ Erro ao buscar agendamentos do pacote:', fetchPacoteError);
+        } else if (pacoteAgendamentos && pacoteAgendamentos.length > 0) {
+          console.log(`📦 Encontrados ${pacoteAgendamentos.length} agendamentos no pacote`);
+          
+          // Calcular valor por agendamento - IGUAL ao PIX (sempre dividir por 4)
+          const valorPorAgendamento = Number(payment_amount) / 4;
+          
+          // Atualizar TODOS os agendamentos do pacote
+          for (const agendamentoPacote of pacoteAgendamentos) {
+            const { error: updateError } = await supabaseService
+              .from('agendamentos')
+              .update({
+                status: 'confirmado',
+                valor_pago: valorPorAgendamento,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', agendamentoPacote.id);
+              
+            if (updateError) {
+              console.error(`❌ Erro ao atualizar agendamento ${agendamentoPacote.id}:`, updateError);
+            } else {
+              console.log(`✅ Agendamento ${agendamentoPacote.id} CONFIRMADO - valor pago: R$ ${valorPorAgendamento}`);
+            }
+          }
+        } else {
+          console.log('⚠️ Nenhum agendamento encontrado para o pacote');
+        }
+      } else {
+        // Atualizar agendamento individual (incluir valor_pago como no PIX)
+        console.log('📋 Processando agendamento individual...');
+        await supabaseService
+          .from('agendamentos')
+          .update({ 
+            status: 'confirmado',
+            valor_pago: Number(payment_amount),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', agendamento_id)
+      }
 
       return new Response(
         JSON.stringify({ 

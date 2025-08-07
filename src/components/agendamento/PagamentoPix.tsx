@@ -5,6 +5,8 @@ import { Copy, QrCode, CheckCircle, ArrowLeft, Plus, AlertCircle, RefreshCw, Cre
 import { useToast } from '@/hooks/use-toast';
 import { validatePixCode } from '@/utils/pixGenerator';
 import { usePaymentStatus } from '@/hooks/usePaymentStatus';
+import { usePaymentHeartbeat } from '@/hooks/usePaymentHeartbeat';
+import { useGlobalPaymentMonitor } from '@/hooks/useGlobalPaymentMonitor';
 import QRCodeLib from 'qrcode';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,24 +39,45 @@ const PagamentoPix: React.FC<PagamentoPixProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const handlePaymentConfirmed = () => {
+    console.log('🎉 Payment confirmed! Redirecting to dashboard...');
+    toast({
+      title: "Pagamento confirmado! 🎉",
+      description: "Redirecionando para seus agendamentos...",
+    });
+    
+    // Redirecionar para o dashboard do cliente com aba de agendamentos após 2 segundos
+    setTimeout(() => {
+      navigate(`/agendamento?owner=${ownerId}&dashboard&tab=meus-agendamentos`);
+    }, 2000);
+    
+    onPaymentConfirmed();
+  };
+
   const { paymentStatus, isChecking } = usePaymentStatus({
     agendamentoId,
     ownerId,
-    onPaymentConfirmed: () => {
-      console.log('🎉 Payment confirmed! Redirecting to dashboard...');
-      toast({
-        title: "Pagamento confirmado! 🎉",
-        description: "Redirecionando para seus agendamentos...",
-      });
-      
-      // Redirecionar para o dashboard do cliente com aba de agendamentos após 2 segundos
-      setTimeout(() => {
-        navigate(`/agendamento?owner=${ownerId}&dashboard&tab=meus-agendamentos`);
-      }, 2000);
-      
-      onPaymentConfirmed();
-    },
+    onPaymentConfirmed: handlePaymentConfirmed,
     enabled: true
+  });
+
+  // Heartbeat específico para este agendamento
+  usePaymentHeartbeat({
+    enabled: true,
+    agendamentoId,
+    ownerId,
+    onPaymentFound: handlePaymentConfirmed
+  });
+
+  // Monitor global de pagamentos (funciona mesmo fora da tela)
+  useGlobalPaymentMonitor({
+    enabled: true,
+    ownerId,
+    onPaymentFound: (foundAgendamentoId) => {
+      if (foundAgendamentoId === agendamentoId) {
+        handlePaymentConfirmed();
+      }
+    }
   });
 
   useEffect(() => {
