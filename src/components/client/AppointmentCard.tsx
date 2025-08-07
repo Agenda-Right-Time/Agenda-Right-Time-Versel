@@ -341,26 +341,19 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
     return (
       <>
         {/* Modal para pagamento com cartão */}
-        <Dialog open={showCardForm} onOpenChange={setShowCardForm}>
-          <DialogContent className="max-w-4xl bg-gray-900 border-gray-700 max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-white flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-blue-500" />
-                Pagamento com Cartão
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-4">
+        {showCardForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="max-w-md w-full bg-gray-900 border border-gray-700 p-6 rounded-lg space-y-4">
               <MercadoPagoCardForm
-                agendamentoId={agendamento.id}
+                agendamentoId={agendamento.isPacoteMensal && agendamento.pacoteInfo?.agendamentosPacote ? agendamento.pacoteInfo.agendamentosPacote[0].id : agendamento.id}
                 ownerId={ownerId}
-                paymentAmount={agendamento.isPacoteMensal ? (agendamento.valor || 0) : (valorAntecipado || (agendamento.valor || 0) * 0.5)}
+                paymentAmount={agendamento.isPacoteMensal ? agendamento.valor || 0 : valorAntecipado || (agendamento.valor || 0) * 0.5}
                 onSuccess={handleCardSuccess}
                 onCancel={() => setShowCardForm(false)}
               />
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
 
         {/* Card do agendamento normal */}
         <Card className="bg-gray-900 border-gray-700">
@@ -512,9 +505,9 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
       <>
         {/* Modal compacto para pagamento PIX */}
         <Dialog open={showPixPayment} onOpenChange={setShowPixPayment}>
-          <DialogContent className="max-w-md bg-gray-900 border-gray-700">
+          <DialogContent className="text-white max-w-md bg-gray-900 border-gray-700 p-20">
             <DialogHeader>
-              <DialogTitle className="text-white flex items-center gap-2">
+              <DialogTitle className="flex text-xl items-center justify-center mb-10 gap-2">
                 <QrCode className="h-5 w-5 text-yellow-500" />
                 Pagamento PIX
               </DialogTitle>
@@ -597,7 +590,7 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg text-purple-200 flex items-center gap-2">
                 <Package className="h-5 w-5 text-purple-400" />
-                {agendamento.servicos.nome} - Pacote Mensal
+                {agendamento.servicos.nome}
               </CardTitle>
               <Badge variant="secondary" className="bg-purple-500/20 text-purple-200 text-xs whitespace-nowrap">
                 Pacote Mensal
@@ -682,20 +675,21 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
 
             {/* Lista dos 4 agendamentos */}
             <div className="bg-gray-800/50 rounded-lg p-4">
-              <h4 className="text-purple-200 font-semibold mb-3 flex items-center gap-2">
+            <h4 className="text-purple-200 font-semibold mb-3 flex items-center gap-2 flex-wrap">
                 <Calendar className="h-4 w-4" />
                 Suas Sessões Agendadas:
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 ml-2">
                 {agendamento.pacoteInfo.sessoesCanceladas ? (
-                  <Badge variant="destructive" className="ml-2 text-xs">
+                  <Badge variant="destructive" className="text-xs">
                     {agendamento.pacoteInfo.sessoesCanceladas} sessão(ões) cancelada(s)
                   </Badge>
                 ) : null}
-                {agendamento.pacoteInfo.sessoesConcluidas ? (  // ← NOVO BLOCO ADICIONADO
-                  <Badge className="ml-2 text-xs bg-blue-500/20 text-blue-300 border-blue-500/50">
+                    {agendamento.pacoteInfo.sessoesConcluidas ? (
+                  <Badge className="text-xs bg-blue-500/20 text-blue-300 border-blue-500/50">
                     {agendamento.pacoteInfo.sessoesConcluidas} sessão(ões) concluída(s)
                   </Badge>
-                ) : null}
-
+                  ) : null}
+                </div>
               </h4>
               <div className="space-y-2">
                 {agendamento.pacoteInfo.agendamentosPacote?.map((sessao, index) => (
@@ -744,14 +738,6 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
               </div>
             </div>
 
-            {/* Observações */}
-            {agendamento.observacoes && (
-              <div className="flex items-start gap-2 text-gray-300">
-                <MessageSquare className="h-4 w-4 text-purple-400 mt-0.5 flex-shrink-0" />
-                <span className="text-sm">{agendamento.observacoes}</span>
-              </div>
-            )}
-
             {/* Mensagem específica para pacotes mensais - apenas se não for pendente */}
             {agendamento.status !== 'pendente' && (
               <div className="text-xs text-purple-300 bg-purple-900/20 p-3 rounded border-l-4 border-purple-500">
@@ -770,9 +756,9 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
     <>
       {/* Modal compacto para pagamento PIX */}
       <Dialog open={showPixPayment} onOpenChange={setShowPixPayment}>
-        <DialogContent className="max-w-md bg-gray-900 border-gray-700">
+        <DialogContent className="text-white max-w-md bg-gray-900 border-gray-700 p-20">
           <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
+            <DialogTitle className="flex text-xl items-center justify-center mb-10 gap-2">
               <QrCode className="h-5 w-5 text-yellow-500" />
               Pagamento PIX
             </DialogTitle>

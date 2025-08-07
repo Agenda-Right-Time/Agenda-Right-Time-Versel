@@ -393,7 +393,7 @@ const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({
             <Button
               variant="outline"
               onClick={onCancel}
-              className="border-gray-600 text-white hover:bg-gray-800"
+              className="border-gray-600 text-gray-900 hover:bg-gray-800"
             >
               Voltar ao PIX
             </Button>
