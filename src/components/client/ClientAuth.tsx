@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useClientOnlyAuth } from '@/hooks/useClientOnlyAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Crown, Mail, Lock, User, Phone } from 'lucide-react';
+import { Crown, Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react';
 import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 
 const ClientAuth = () => {
@@ -16,6 +16,9 @@ const ClientAuth = () => {
   const ownerParam = searchParams.get('owner');
   const isDashboard = searchParams.get('dashboard') === 'true';
   const [loading, setLoading] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Usar o slug da rota primeiro, depois o parâmetro owner
   const empresaSlug = routeSlug || ownerParam || '';
@@ -234,13 +237,22 @@ const ClientAuth = () => {
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
-                      type="password"
+                      type={showLoginPassword ? 'text' : 'password'}
                       value={loginData.password}
                       onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                      className="bg-gray-800 border-gray-600 pl-10 text-white placeholder-gray-400"
+                      className="bg-gray-800 border-gray-600 pl-10 pr-10 text-white placeholder-gray-400"
                       placeholder="Sua senha"
                       required
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    >
+                      {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
                   </div>
                 </div>
                 
@@ -299,14 +311,23 @@ const ClientAuth = () => {
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
-                      type="password"
+                      type={showSignupPassword ? 'text' : 'password'}
                       value={signupData.password}
                       onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                      className="bg-gray-800 border-gray-600 pl-10 text-white placeholder-gray-400"
+                      className="bg-gray-800 border-gray-600 pl-10 pr-10 text-white placeholder-gray-400"
                       placeholder="Mínimo 6 caracteres"
                       required
                       minLength={6}
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      onClick={() => setShowSignupPassword(!showSignupPassword)}
+                    >
+                      {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
                   </div>
                 </div>
                 
@@ -314,13 +335,22 @@ const ClientAuth = () => {
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
-                      type="password"
+                      type={showConfirmPassword ? 'text' : 'password'}
                       value={signupData.confirmPassword}
                       onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
-                      className="bg-gray-800 border-gray-600 pl-10 text-white placeholder-gray-400"
+                      className="bg-gray-800 border-gray-600 pl-10 pr-10 text-white placeholder-gray-400"
                       placeholder="Confirme sua senha"
                       required
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
                   </div>
                 </div>
                 

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useProfessionalAuth } from "@/hooks/useProfessionalAuth";
-import { ArrowRight, Mail, Lock, Calendar, X, Building, Check, AlertCircle } from "lucide-react";
+import { ArrowRight, Mail, Lock, Calendar, X, Building, Check, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,12 +17,15 @@ interface TrialSignupProps {
 const TrialSignup = ({ onClose, initialLoginMode = false }: TrialSignupProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [nome, setNome] = useState('');
   const [empresa, setEmpresa] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(initialLoginMode);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [checkingSlug, setCheckingSlug] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signInProfessional, signUpProfessional } = useProfessionalAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -134,6 +137,15 @@ const TrialSignup = ({ onClose, initialLoginMode = false }: TrialSignupProps) =>
         toast({
           title: "Erro na validação", 
           description: "Senha deve ter pelo menos 6 caracteres",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        toast({
+          title: "Erro na validação", 
+          description: "As senhas não coincidem",
           variant: "destructive"
         });
         return;
@@ -384,16 +396,53 @@ const TrialSignup = ({ onClose, initialLoginMode = false }: TrialSignupProps) =>
               <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 bg-gray-800 border-gray-600 text-white"
+                className="pl-10 pr-10 bg-gray-800 border-gray-600 text-white"
                 placeholder="Mínimo 6 caracteres"
                 minLength={6}
                 required
               />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
             </div>
           </div>
+
+          {!isLoginMode && (
+            <div>
+              <Label htmlFor="confirmPassword" className="text-gray-300">Confirmar Senha</Label>
+              <div className="relative mt-1">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="pl-10 pr-10 bg-gray-800 border-gray-600 text-white"
+                  placeholder="Confirme sua senha"
+                  minLength={6}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {!isLoginMode && (
             <div className="bg-gold-500/10 border border-gold-500/30 rounded-lg p-4 text-center">
