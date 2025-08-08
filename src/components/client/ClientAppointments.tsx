@@ -92,7 +92,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
       hoje.setHours(0, 0, 0, 0);
       const dataAtual = hoje.toISOString();
 
-      // Buscar agendamentos normais confirmados OU agendados
+      // Buscar agendamentos normais confirmados ou pendentes
       // Buscar tanto por cliente_email quanto por cliente_id para incluir agendamentos da dashboard
       let query = supabase
         .from('agendamentos')
@@ -108,7 +108,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
           pagamentos(status, valor)
         `)
         .eq('user_id', ownerId)
-        .in('status', ['confirmado', 'agendado', 'pendente', 'concluido']) // Incluir concluidos para pacotes mensais
+        .in('status', ['confirmado', 'pendente', 'concluido']) // Incluir concluidos para pacotes mensais
         .gte('data_hora', dataAtual)
         .order('data_hora', { ascending: true });
 
@@ -206,7 +206,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
                 a.status !== 'cancelado' && a.status !== 'concluido'
               );
               
-              let pacoteStatus = 'agendado';
+              let pacoteStatus = 'pendente';
               if (hasPaidPayment || sessoesAtivas.some(a => a.status === 'confirmado')) {
                 pacoteStatus = 'confirmado';
               } else if (hasPendingPayment) {
@@ -752,7 +752,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
                             </h3>
                             <Badge 
                               variant={
-                                agendamento.status === 'confirmado' || agendamento.status === 'agendado' ? 'default' :
+                                agendamento.status === 'confirmado' ? 'default' :
                                 agendamento.status === 'concluido' ? 'secondary' :
                                 agendamento.status === 'pendente' ? 'outline' : 
                                 'destructive'
@@ -760,7 +760,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
                               className="text-xs"
                             >
                               {agendamento.status === 'confirmado' ? 'Confirmado' :
-                               agendamento.status === 'agendado' ? 'Agendado' :
+                               agendamento.status === 'pendente' ? 'Pendente' :
                                agendamento.status === 'concluido' ? 'Concluído' :
                                agendamento.status === 'pendente' ? 'Pendente' :
                                agendamento.status === 'cancelado' ? 'Cancelado' : agendamento.status}
@@ -788,7 +788,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
         <div className="space-y-4">
           {agendamentos
             .sort((a, b) => {
-              const statusOrder = { 'confirmado': 1, 'agendado': 1, 'pendente': 2, 'cancelado': 3 };
+              const statusOrder = { 'confirmado': 1, 'pendente': 2, 'cancelado': 3 };
               const aStatus = statusOrder[a.status as keyof typeof statusOrder] || 2;
               const bStatus = statusOrder[b.status as keyof typeof statusOrder] || 2;
               
