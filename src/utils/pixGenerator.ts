@@ -239,69 +239,65 @@ export const getUserPixKey = async (userId: string): Promise<string | null> => {
   }
 };
 
-// Função simplificada para gerar código PIX para agendamentos
+// Função para gerar código PIX APENAS VIA MERCADO PAGO (100% seguro)
 export const generateSimplePixCode = async (params: {
   amount: number;
   description: string;
   merchantName: string;
   userId: string;
+  agendamentoId?: string; // OBRIGATÓRIO para garantir external_reference
 }) => {
-  const { amount, description, merchantName, userId } = params;
+  const { amount, description, merchantName, userId, agendamentoId } = params;
   
-  console.log('=== INICIANDO GERAÇÃO PIX COMPLETA ===');
-  console.log('Parâmetros recebidos:', { amount, merchantName, userId, description });
+  console.log('=== GERAÇÃO PIX VIA MERCADO PAGO (ZERO RISCO) ===');
+  console.log('Parâmetros recebidos:', { amount, merchantName, userId, description, agendamentoId });
   
   try {
     // Validar parâmetros de entrada
     if (!userId) {
-      console.error('❌ User ID não fornecido para buscar chave PIX');
-      throw new Error('User ID é obrigatório para buscar a chave PIX');
+      console.error('❌ User ID não fornecido');
+      throw new Error('User ID é obrigatório');
     }
     
     if (!amount || amount <= 0) {
       console.error('❌ Valor inválido:', amount);
       throw new Error('Valor deve ser maior que zero');
     }
-    
-    if (!merchantName || merchantName.trim().length === 0) {
-      console.error('❌ Nome do comerciante não fornecido');
-      throw new Error('Nome do comerciante é obrigatório');
+
+    // CRÍTICO: Agendamento ID é OBRIGATÓRIO para segurança
+    if (!agendamentoId) {
+      console.error('❌ AgendamentoId não fornecido - REJEITANDO por segurança');
+      throw new Error('Agendamento ID é obrigatório para gerar PIX seguro. Sistema não permite PIX sem rastreamento.');
     }
+
+    console.log('🎯 USANDO MERCADO PAGO OBRIGATORIAMENTE para garantir external_reference');
     
-    console.log('✅ Validações iniciais passaram. Buscando chave PIX...');
+    const { supabase } = await import('@/integrations/supabase/client');
     
-    // Buscar chave PIX do usuário
-    const pixKey = await getUserPixKey(userId);
-    
-    if (!pixKey) {
-      console.error('=== FALHA: CHAVE PIX NÃO ENCONTRADA ===');
-      console.error('User ID pesquisado:', userId);
-      throw new Error('Chave PIX não configurada. Configure sua chave PIX (email) nas configurações do sistema para receber pagamentos.');
-    }
-    
-    console.log('=== CHAVE PIX ENCONTRADA, GERANDO CÓDIGO ===');
-    console.log('Chave PIX para usar:', pixKey);
-    
-    // Gerar ID único para a transação (formato mais seguro)
-    const timestamp = Date.now().toString().slice(-8);
-    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const txid = `AGD${timestamp}${randomSuffix}`.substring(0, 25);
-    
-    console.log('TxID gerado:', txid);
-    
-    const pixCode = generatePixCode({
-      merchantName: merchantName || 'PRESTADOR SERVICOS',
-      merchantCity: 'SAO PAULO',
-      amount,
-      txid,
-      pixKey
+    const { data: response, error } = await supabase.functions.invoke('create-pix-preference', {
+      body: {
+        amount: amount,
+        description: description,
+        userId: userId,
+        agendamentoId: agendamentoId
+      }
     });
+
+    if (error) {
+      console.error('❌ ERRO CRÍTICO na edge function:', error);
+      throw new Error(`Erro ao criar preferência PIX via Mercado Pago: ${error.message}. Verifique suas configurações do Mercado Pago.`);
+    }
     
-    console.log('=== PIX GERADO COM SUCESSO ===');
-    console.log('Código PIX final:', pixCode);
-    console.log('Código válido:', validatePixCode(pixCode));
+    if (!response?.pixCode) {
+      console.error('❌ ERRO CRÍTICO: Mercado Pago não retornou código PIX');
+      throw new Error('Mercado Pago não conseguiu gerar código PIX. Verifique suas configurações.');
+    }
+
+    console.log('✅ PIX SEGURO gerado via Mercado Pago!');
+    console.log('🎯 External Reference garantido:', agendamentoId);
+    console.log('🔒 ZERO RISCO de confirmação errada');
     
-    return pixCode;
+    return response.pixCode;
     
   } catch (error) {
     console.error('=== ERRO NA GERAÇÃO DO CÓDIGO PIX ===');

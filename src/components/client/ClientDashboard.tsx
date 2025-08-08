@@ -9,8 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ClientAppointments from './ClientAppointments';
 import EstablishmentProfile from './EstablishmentProfile';
-import { usePaymentHeartbeat } from '@/hooks/usePaymentHeartbeat';
-import { usePaymentRecovery } from '@/hooks/usePaymentRecovery';
+import GlobalPaymentListener from '../GlobalPaymentListener';
 
 interface ClientDashboardProps {
   ownerId: string;
@@ -26,28 +25,10 @@ const ClientDashboard = ({ ownerId, onNewAppointment }: ClientDashboardProps) =>
   const [empresaSlug, setEmpresaSlug] = useState<string>('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Heartbeat global para monitorar pagamentos
-  usePaymentHeartbeat({
-    enabled: true,
-    onPaymentFound: () => {
-      console.log('💓 Heartbeat detectou pagamento confirmado');
-      setRefreshTrigger(prev => prev + 1);
-    }
-  });
-
-  // Recovery de pagamentos perdidos
-  usePaymentRecovery({
-    enabled: true,
-    ownerId: ownerId,
-    onRecoveredPayment: (agendamentoId) => {
-      console.log('🔄 Pagamento recuperado:', agendamentoId);
-      toast({
-        title: "Pagamento Confirmado!",
-        description: "Um pagamento foi confirmado automaticamente.",
-      });
-      setRefreshTrigger(prev => prev + 1);
-    }
-  });
+  // Listener global para atualizar esta tela quando pagamento confirmar
+  const handleGlobalPaymentConfirmed = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   // Variáveis computadas após hooks
   const activeTab = searchParams.get('tab') || 'meus-agendamentos';
@@ -106,11 +87,11 @@ const ClientDashboard = ({ ownerId, onNewAppointment }: ClientDashboardProps) =>
   };
 
   const handleNewAppointment = () => {
-    // ROTA LIMPA - ir para nova marcação usando apenas empresa_slug
+    // FORÇA RESET COMPLETO - sempre vai para seleção de serviço
     if (empresaSlug) {
-      navigate(`/${empresaSlug}`, { replace: true });
+      navigate(`/${empresaSlug}?reset=true`, { replace: true });
     } else {
-      navigate(`/`, { replace: true });
+      navigate(`/?reset=true`, { replace: true });
     }
   };
 
@@ -123,6 +104,11 @@ const ClientDashboard = ({ ownerId, onNewAppointment }: ClientDashboardProps) =>
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Listener GLOBAL - funciona em qualquer tela! */}
+      <GlobalPaymentListener 
+        ownerId={ownerId} 
+        onPaymentConfirmed={handleGlobalPaymentConfirmed} 
+      />
       {/* Header */}
       <header className="bg-gray-900 border-b border-gray-800 p-3 sm:p-4">
        <div className="container mx-auto">

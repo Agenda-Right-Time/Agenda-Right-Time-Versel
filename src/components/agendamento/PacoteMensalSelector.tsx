@@ -220,17 +220,19 @@ const PacoteMensalSelector: React.FC<PacoteMensalSelectorProps> = ({
           const isPacoteMensal = agendamento.observacoes?.includes('PACOTE MENSAL');
           
           // Verificar se tem pagamento concluído
-          const hasPaidPayment = agendamento.pagamentos?.some((p: any) => p.status === 'pago');
+          const pagamentosArray = Array.isArray(agendamento.pagamentos) ? agendamento.pagamentos : (agendamento.pagamentos ? [agendamento.pagamentos] : []);
+          const hasPaidPayment = pagamentosArray.some((p: any) => p.status === 'pago');
           
           // Para pacote mensal: verificar se há pagamento pago para qualquer agendamento do mesmo pacote
           let pacotePaid = false;
           if (isPacoteMensal && agendamento.observacoes) {
             const pacoteId = agendamento.observacoes.match(/PMT\d+/)?.[0];
             if (pacoteId && pacoteMensalAgendamentos) {
-              pacotePaid = pacoteMensalAgendamentos.some(pacoteApp => 
-                pacoteApp.observacoes?.includes(pacoteId) && 
-                pacoteApp.pagamentos?.some((p: any) => p.status === 'pago')
-              );
+              pacotePaid = pacoteMensalAgendamentos.some(pacoteApp => {
+                const pagamentosArrayPacote = Array.isArray(pacoteApp.pagamentos) ? pacoteApp.pagamentos : (pacoteApp.pagamentos ? [pacoteApp.pagamentos] : []);
+                return pacoteApp.observacoes?.includes(pacoteId) && 
+                       pagamentosArrayPacote.some((p: any) => p.status === 'pago');
+              });
             }
           }
           

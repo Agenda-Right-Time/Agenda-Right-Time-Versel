@@ -19,6 +19,7 @@ import PaymentSuccess from '@/components/agendamento/PaymentSuccess';
 import ClientDashboard from '@/components/client/ClientDashboard';
 import ClientAuth from '@/components/client/ClientAuth';
 import ClienteForm from '@/components/agendamento/ClienteForm';
+import GlobalPaymentListener from '@/components/GlobalPaymentListener';
 import { Calendar } from 'lucide-react';
 
 interface Servico {
@@ -150,6 +151,32 @@ const Agendamento = () => {
       setConfig(null);
     }
   }, [finalOwnerId, fetchServicos, fetchProfissionais, fetchConfig]);
+
+  // Reset completo quando o parâmetro reset=true estiver presente
+  useEffect(() => {
+    const resetParam = searchParams.get('reset');
+    if (resetParam === 'true') {
+      console.log('🔄 Forçando reset completo do agendamento');
+      setStep(1);
+      setServicoSelecionado(null);
+      setProfissionalSelecionado(null);
+      setSelectedDateTime(null);
+      setSelectedDateTimes([]);
+      setIsPacoteMensal(false);
+      setObservacoes('');
+      setAgendamentoId('');
+      setPixCode('');
+      setPaymentAmount(0);
+      
+      // Remove o parâmetro reset da URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('reset');
+      const newUrl = newParams.toString() 
+        ? `${window.location.pathname}?${newParams.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [searchParams]);
 
   // Preencher dados do cliente se logado
   useEffect(() => {
@@ -374,7 +401,8 @@ const Agendamento = () => {
         amount: valorAntecipado,
         description: `PACOTE MENSAL ${pacoteId}`,
         merchantName: merchantName,
-        userId: finalOwnerId
+        userId: finalOwnerId,
+        agendamentoId: agendamentoId // 🎯 CRÍTICO: Garantir external_reference
       });
 
       console.log('🔑 PIX Code gerado com sucesso');
@@ -591,7 +619,8 @@ const Agendamento = () => {
         amount: valorAntecipado,
         description: `Agendamento ${agendamentoId}`,
         merchantName: merchantName,
-        userId: finalOwnerId
+        userId: finalOwnerId,
+        agendamentoId: agendamentoId // 🎯 CRÍTICO: Garantir external_reference
       });
 
       console.log('🔑 PIX Code gerado com sucesso');
@@ -777,7 +806,10 @@ const Agendamento = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <AgendamentoHeader 
+      {/* Listener GLOBAL - funciona em qualquer tela, incluindo PIX! */}
+      <GlobalPaymentListener ownerId={finalOwnerId || ''} />
+      
+      <AgendamentoHeader
         businessName="Agenda Right Time"
         showClientDashboard={!!user}
         onShowDashboard={handleGoToClientArea}

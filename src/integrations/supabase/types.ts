@@ -525,7 +525,7 @@ export type Database = {
           {
             foreignKeyName: "pagamentos_agendamento_id_fkey"
             columns: ["agendamento_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "agendamentos"
             referencedColumns: ["id"]
           },

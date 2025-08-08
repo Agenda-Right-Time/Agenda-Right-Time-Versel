@@ -211,9 +211,9 @@ export const usePaymentStatus = ({
     // Verificar imediatamente
     checkPaymentStatus();
 
-    // Configurar verificação CONSTANTE a cada 2 segundos para não perder confirmação
+    // Configurar verificação SUPER FREQUENTE a cada 1.5 segundos para confirmação instantânea
     if (!intervalRef.current) {
-      intervalRef.current = setInterval(checkPaymentStatus, 2000);
+      intervalRef.current = setInterval(checkPaymentStatus, 1500);
     }
 
     // Configurar listener em tempo real

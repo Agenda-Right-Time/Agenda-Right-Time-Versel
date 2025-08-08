@@ -192,13 +192,14 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
   };
 
   const getPaymentStatus = (pagamentos: Agendamento['pagamentos']) => {
-    if (!pagamentos || pagamentos.length === 0) {
+    const pagamentosArray = Array.isArray(pagamentos) ? pagamentos : (pagamentos ? [pagamentos] : []);
+    if (!pagamentosArray || pagamentosArray.length === 0) {
       return { status: 'Pendente', color: 'text-yellow-500' };
     }
 
     // Para pacotes mensais, verificar se há pagamento pago em qualquer sessão ativa
-    const hasPaidPayment = pagamentos.some(p => p.status === 'pago');
-    const hasPendingPayment = pagamentos.some(p => p.status === 'pendente');
+    const hasPaidPayment = pagamentosArray.some(p => p.status === 'pago');
+    const hasPendingPayment = pagamentosArray.some(p => p.status === 'pendente');
     
     if (hasPaidPayment) {
       return { status: 'Pago', color: 'text-green-500' };
@@ -238,55 +239,33 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
       console.log('💸 Valor antecipado:', valorAntecipado);
       setPaymentAmount(valorAntecipado);
 
-      // Buscar dados do perfil para o nome do comerciante
-      const { data: profile, error: profileError } = await supabase
-        .from('profissional_profiles')
-        .select('nome, empresa')
-        .eq('id', ownerId)
-        .single();
-
-      if (profileError) {
-        console.error('⚠️ Erro ao buscar perfil:', profileError);
-      }
-
-      const merchantName = profile?.empresa || profile?.nome || 'PRESTADOR SERVICOS';
-      console.log('🏪 Nome do comerciante:', merchantName);
-
-      // Gerar código PIX
-      const { generateSimplePixCode } = await import('@/utils/pixGenerator');
+      console.log('🎯 GERANDO PIX VIA MERCADO PAGO - 100% SEGURO');
       
-      const pixCodeGenerated = await generateSimplePixCode({
-        amount: valorAntecipado,
-        description: `Agendamento ${agendamento.id}`,
-        merchantName: merchantName,
-        userId: ownerId
+      // Gerar código PIX via Mercado Pago diretamente
+      const { data: response, error: pixError } = await supabase.functions.invoke('create-pix-preference', {
+        body: {
+          amount: valorAntecipado,
+          description: `Agendamento ${agendamento.id}`,
+          userId: ownerId,
+          agendamentoId: agendamento.id
+        }
       });
 
-      console.log('🔑 PIX Code gerado com sucesso');
-
-      // Criar registro de pagamento
-      const { data: pagamento, error: pagamentoError } = await supabase
-        .from('pagamentos')
-        .insert({
-          agendamento_id: agendamento.id,
-          valor: valorAntecipado,
-          percentual: agendamento.isPacoteMensal ? 100 : 50,
-          status: 'pendente',
-          user_id: ownerId,
-          pix_code: pixCodeGenerated,
-          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutos
-        })
-        .select('id')
-        .single();
-
-      if (pagamentoError) {
-        console.error('❌ Erro ao criar pagamento:', pagamentoError);
-        throw pagamentoError;
+      if (pixError) {
+        console.error('❌ ERRO CRÍTICO na geração PIX:', pixError);
+        throw new Error(`Erro ao gerar PIX: ${pixError.message}`);
+      }
+      
+      if (!response?.pixCode) {
+        console.error('❌ ERRO CRÍTICO: Resposta sem PIX code');
+        throw new Error('Mercado Pago não conseguiu gerar código PIX. Verifique suas configurações.');
       }
 
-      console.log('✅ Pagamento criado:', pagamento.id);
-      setPixCode(pixCodeGenerated);
-      await generateQRCode(pixCodeGenerated);
+      console.log('✅ PIX Code gerado via Mercado Pago com sucesso!');
+      console.log('🎯 External Reference garantido:', agendamento.id);
+
+      setPixCode(response.pixCode);
+      await generateQRCode(response.pixCode);
       setShowPixPayment(true);
 
     } catch (error) {
@@ -295,9 +274,11 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
       let errorMessage = "Não foi possível gerar o pagamento PIX.";
       
       if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
+        if (error.message.includes('verificações do Mercado Pago')) {
+          errorMessage = 'Configure suas credenciais do Mercado Pago no dashboard.';
+        } else {
+          errorMessage = error.message;
+        }
       }
       
       toast({

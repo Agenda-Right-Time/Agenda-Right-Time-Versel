@@ -189,7 +189,8 @@ const AppointmentsManager = () => {
           return false;
         }
         
-        const hasExpiredPayment = appointment.pagamentos.some(payment => 
+        const pagamentosArray = Array.isArray(appointment.pagamentos) ? appointment.pagamentos : (appointment.pagamentos ? [appointment.pagamentos] : []);
+        const hasExpiredPayment = pagamentosArray.some(payment => 
           payment.status === 'pendente' && new Date(payment.expires_at) < now
         );
         return hasExpiredPayment;
@@ -269,7 +270,7 @@ const AppointmentsManager = () => {
       console.log('📋 Agendamentos detalhados:', normalAppointments);
 
       // Mapear status para exibição na dashboard e processar pacotes mensais
-      const mappedNormalAppointments: Appointment[] = (normalAppointments || []).map(appointment => {
+      const mappedNormalAppointments = (normalAppointments || []).map(appointment => {
         const isPacoteMensal = appointment.observacoes?.includes('PACOTE MENSAL');
         
         if (isPacoteMensal) {
@@ -282,13 +283,15 @@ const AppointmentsManager = () => {
           );
           
           // Verificar se QUALQUER agendamento do pacote tem pagamento
-          const temPagamentoPacote = agendamentosDoPacote.some(a => 
-            a.pagamentos?.some((p: any) => p.status === 'pago')
-          );
+          const temPagamentoPacote = agendamentosDoPacote.some(a => {
+            const pagamentosArray = Array.isArray(a.pagamentos) ? a.pagamentos : (a.pagamentos ? [a.pagamentos] : []);
+            return pagamentosArray.some((p: any) => p.status === 'pago');
+          });
           
-          const temPagamentoPendentePacote = agendamentosDoPacote.some(a => 
-            a.pagamentos?.some((p: any) => p.status === 'pendente')
-          );
+          const temPagamentoPendentePacote = agendamentosDoPacote.some(a => {
+            const pagamentosArray = Array.isArray(a.pagamentos) ? a.pagamentos : (a.pagamentos ? [a.pagamentos] : []);
+            return pagamentosArray.some((p: any) => p.status === 'pendente');
+          });
           
           console.log('🔍 [PACOTE DEBUG] Verificando pacote completo:', {
             pacoteId,
@@ -349,6 +352,7 @@ const AppointmentsManager = () => {
             isPacoteMensal: true,
             status: realStatus,
             valor_pago: valorPago,
+            pagamentos: Array.isArray(appointment.pagamentos) ? appointment.pagamentos : (appointment.pagamentos ? [appointment.pagamentos] : []),
             pacoteInfo: {
               sequencia: parseInt(appointment.observacoes?.match(/Sessão (\d+)\/4/)?.[1] || '1'),
               pacoteId: pacoteId
@@ -357,8 +361,9 @@ const AppointmentsManager = () => {
         }
         
         // Para agendamentos normais, verificar status do pagamento
-        const hasPendingPayment = appointment.pagamentos?.some((p: any) => p.status === 'pendente');
-        const hasPaidPayment = appointment.pagamentos?.some((p: any) => p.status === 'pago');
+        const pagamentosArray = Array.isArray(appointment.pagamentos) ? appointment.pagamentos : (appointment.pagamentos ? [appointment.pagamentos] : []);
+        const hasPendingPayment = pagamentosArray.some((p: any) => p.status === 'pendente');
+        const hasPaidPayment = pagamentosArray.some((p: any) => p.status === 'pago');
         
         let displayStatus = appointment.status;
         
@@ -375,14 +380,15 @@ const AppointmentsManager = () => {
           displayStatus = 'agendado';
         }
         // Se não há pagamentos, usar o status original do agendamento
-        else if (!appointment.pagamentos || appointment.pagamentos.length === 0) {
+        else if (!pagamentosArray || pagamentosArray.length === 0) {
           displayStatus = appointment.status === 'confirmado' ? 'agendado' : appointment.status;
         }
         
         return {
           ...appointment,
           displayStatus,
-          isPacoteMensal: false
+          isPacoteMensal: false,
+          pagamentos: pagamentosArray
         };
       });
       

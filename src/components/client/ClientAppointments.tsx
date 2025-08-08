@@ -116,8 +116,9 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
       if (clientProfile?.id) {
         query = query.eq('cliente_id', clientProfile.id);
       } else {
-        // Se não tem perfil de cliente, buscar por email do usuário autenticado
-        query = query.eq('cliente_email', user.email);
+        // Se não tem perfil de cliente, buscar por cliente_id igual ao próprio user ID
+        // ou por email do usuário, dependendo de como foi cadastrado o agendamento
+        query = query.or(`cliente_id.eq.${user.id},cliente_email.eq.${user.email}`);
       }
 
       const { data: normalData, error: normalError } = await query;
@@ -224,7 +225,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
                 profissionais: Array.isArray(agendamento.profissionais)
                   ? agendamento.profissionais[0]
                   : agendamento.profissionais as { nome: string; especialidade: string },
-                pagamentos: agendamento.pagamentos || [],
+                pagamentos: Array.isArray(agendamento.pagamentos) ? agendamento.pagamentos : (agendamento.pagamentos ? [agendamento.pagamentos] : []),
                 isPacoteMensal: true,
                 pacoteInfo: {
                   sequencia: 1,
@@ -262,7 +263,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
             profissionais: Array.isArray(agendamento.profissionais)
               ? agendamento.profissionais[0]
               : agendamento.profissionais as { nome: string; especialidade: string },
-            pagamentos: agendamento.pagamentos || [],
+            pagamentos: Array.isArray(agendamento.pagamentos) ? agendamento.pagamentos : (agendamento.pagamentos ? [agendamento.pagamentos] : []),
             isPacoteMensal: false
           });
         }
@@ -404,8 +405,9 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
       if (clientProfile?.id) {
         query = query.eq('cliente_id', clientProfile.id);
       } else {
-        // Se não tem perfil de cliente, buscar por email do usuário autenticado
-        query = query.eq('cliente_email', user.email);
+        // Se não tem perfil de cliente, buscar por cliente_id igual ao próprio user ID
+        // ou por email do usuário, dependendo de como foi cadastrado o agendamento
+        query = query.or(`cliente_id.eq.${user.id},cliente_email.eq.${user.email}`);
       }
 
       const { data, error } = await query;
@@ -462,7 +464,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
               profissionais: Array.isArray(agendamento.profissionais)
                 ? agendamento.profissionais[0]
                 : agendamento.profissionais as { nome: string; especialidade: string },
-              pagamentos: agendamento.pagamentos || [],
+              pagamentos: Array.isArray(agendamento.pagamentos) ? agendamento.pagamentos : (agendamento.pagamentos ? [agendamento.pagamentos] : []),
               isPacoteMensal: true,
               pacoteInfo: {
                 sequencia: 1,
@@ -476,7 +478,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
                   observacoes: a.observacoes,
                   servicos: Array.isArray(a.servicos) ? a.servicos[0] : a.servicos as { nome: string; duracao: number },
                   profissionais: Array.isArray(a.profissionais) ? a.profissionais[0] : a.profissionais as { nome: string; especialidade: string },
-                  pagamentos: a.pagamentos || []
+                  pagamentos: Array.isArray(a.pagamentos) ? a.pagamentos : (a.pagamentos ? [a.pagamentos] : [])
                 }))
               }
             });
@@ -495,7 +497,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
             profissionais: Array.isArray(agendamento.profissionais)
               ? agendamento.profissionais[0]
               : agendamento.profissionais as { nome: string; especialidade: string },
-            pagamentos: agendamento.pagamentos || [],
+            pagamentos: Array.isArray(agendamento.pagamentos) ? agendamento.pagamentos : (agendamento.pagamentos ? [agendamento.pagamentos] : []),
             isPacoteMensal: false
           });
         }

@@ -89,20 +89,20 @@ serve(async (req) => {
     console.log('💰 Valor esperado:', pagamento.valor)
     console.log('🆔 Agendamento ID:', agendamentoId)
 
-    // Buscar nos últimos 5 MINUTOS (aumentado de 15 segundos)
-    const agora5MinAtras = new Date(agora.getTime() - 300000) // 5 minutos atrás
+    // Buscar nos últimos 10 MINUTOS (aumentado de 5 minutos)
+    const agora10MinAtras = new Date(agora.getTime() - 600000) // 10 minutos atrás
     const agoraFuturo = new Date(agora.getTime() + 10000) // 10 segundos no futuro para compensar delay
 
-    console.log('🕐 Janela de busca: últimos 5 minutos')
-    console.log('📅 De:', agora5MinAtras.toISOString())
+    console.log('🕐 Janela de busca: últimos 10 minutos')
+    console.log('📅 De:', agora10MinAtras.toISOString())
     console.log('📅 Até:', agoraFuturo.toISOString())
 
-    // Buscar pagamentos na API do Mercado Pago dos últimos 5 MINUTOS
+    // Buscar pagamentos na API do Mercado Pago dos últimos 10 MINUTOS
     const searchUrl = new URL('https://api.mercadopago.com/v1/payments/search')
     searchUrl.searchParams.append('sort', 'date_created')
     searchUrl.searchParams.append('criteria', 'desc')
     searchUrl.searchParams.append('limit', '100')
-    searchUrl.searchParams.append('begin_date', agora5MinAtras.toISOString())
+    searchUrl.searchParams.append('begin_date', agora10MinAtras.toISOString())
     searchUrl.searchParams.append('end_date', agoraFuturo.toISOString())
     searchUrl.searchParams.append('status', 'approved') // Buscar apenas pagamentos aprovados
     
@@ -130,50 +130,85 @@ serve(async (req) => {
     const searchData = await searchResponse.json()
     console.log('📊 Total pagamentos encontrados nos últimos 5 minutos:', searchData.results?.length || 0)
 
-    // Procurar pagamento com VALOR EXATO
+    // NOVA ESTRATÉGIA SUPER SEGURA: APENAS confirmar pagamentos com external_reference correto
     let pagamentoEncontrado = null
     const valorEsperado = Number(pagamento.valor)
     
-    console.log('📝 Detalhes da busca:')
+    console.log('📝 Detalhes da busca (MODO SUPER SEGURO):')
     console.log(`   - Agendamento ID: ${agendamentoId}`)
     console.log(`   - Valor buscado: R$ ${valorEsperado}`)
+    console.log(`   - User ID: ${userId}`)
     console.log(`   - Pagamento ID no DB: ${pagamento.id}`)
-    console.log(`   - Status do pagamento no DB: ${pagamento.status}`)
 
     if (searchData.results && searchData.results.length > 0) {
+      // BUSCAR APENAS PAGAMENTOS COM REFERÊNCIA CORRETA
       for (const p of searchData.results) {
         const valorPagamento = Number(p.transaction_amount)
         const isApproved = p.status === 'approved'
         const isPix = p.payment_method_id === 'pix'
         const isCard = p.payment_type_id === 'credit_card' || p.payment_type_id === 'debit_card'
-        // Permitir pequena diferença de centavos devido a arredondamentos
         const valorExato = Math.abs(valorPagamento - valorEsperado) < 0.01
         
-        console.log(`🔍 Pagamento MP: ID=${p.id}, Valor=${valorPagamento}, Status=${p.status}, Método=${p.payment_method_id}, Tipo=${p.payment_type_id}, Parcelas=${p.installments || 1}, Data=${p.date_created}`)
-        console.log(`🎯 Critérios: Aprovado=${isApproved}, PIX=${isPix}, Cartão=${isCard}, ValorExato=${valorExato} (esperado=${valorEsperado}, diferença=${Math.abs(valorPagamento - valorEsperado)})`)
+        console.log(`🔍 Analisando pagamento MP:`)
+        console.log(`   - ID: ${p.id}`)
+        console.log(`   - Valor: R$ ${valorPagamento} (esperado: R$ ${valorEsperado})`)
+        console.log(`   - Status: ${p.status}`)
+        console.log(`   - Método: ${p.payment_method_id}`)
+        console.log(`   - Tipo: ${p.payment_type_id}`)
+        console.log(`   - External Reference: "${p.external_reference}"`)
+        console.log(`   - Metadata: ${JSON.stringify(p.metadata)}`)
+        console.log(`   - Data: ${p.date_created}`)
         
-        // CRITÉRIOS: Aprovado + (PIX OU CARTÃO) + Valor EXATO
-        // PRIORIDADE 1: Pagamentos com external_reference ou metadata corretos
-        // PRIORIDADE 2: Pagamentos com valor exato (fallback para pagamentos sem referência)
-        const hasCorrectReference = p.external_reference === agendamentoId;
-        const hasCorrectMetadata = p.metadata?.agendamento_id === agendamentoId;
-        console.log(`🎯 External Reference: ${p.external_reference} === ${agendamentoId} = ${hasCorrectReference}`);
-        console.log(`🎯 Metadata Check: ${p.metadata?.agendamento_id} === ${agendamentoId} = ${hasCorrectMetadata}`);
-        
-        if (isApproved && (isPix || isCard) && valorExato) {
-          // PRIORIDADE 1: Com referência correta (mais seguro)
-          if (hasCorrectReference || hasCorrectMetadata) {
-            pagamentoEncontrado = p
-            console.log(`✅ PAGAMENTO VÁLIDO COM REFERÊNCIA! ID=${p.id}, Valor: ${valorPagamento}, Método: ${isPix ? 'PIX' : 'CARTÃO'}, Parcelas: ${p.installments || 1}, Ref: ${p.external_reference}`)
-            break
-          }
-          // PRIORIDADE 2: Sem referência mas valor exato (fallback)
-          else if (!pagamentoEncontrado) {
-            pagamentoEncontrado = p
-            console.log(`✅ PAGAMENTO ENCONTRADO POR VALOR! ID=${p.id}, Valor: ${valorPagamento}, Método: ${isPix ? 'PIX' : 'CARTÃO'}, Parcelas: ${p.installments || 1}`)
-            // Não quebra aqui - continua procurando um com referência correta
-          }
+        // CRITÉRIOS OBRIGATÓRIOS
+        if (!isApproved) {
+          console.log(`❌ REJEITADO: Status não é 'approved' (${p.status})`);
+          continue;
         }
+        
+        if (!isPix && !isCard) {
+          console.log(`❌ REJEITADO: Método de pagamento não é PIX nem cartão (${p.payment_method_id})`);
+          continue;
+        }
+        
+        if (!valorExato) {
+          console.log(`❌ REJEITADO: Valor não confere (${valorPagamento} !== ${valorEsperado})`);
+          continue;
+        }
+        
+        // VERIFICAÇÃO DE REFERÊNCIA OBRIGATÓRIA
+        const hasCorrectReference = p.external_reference === agendamentoId;
+        const hasCorrectMetadata = p.metadata && p.metadata.agendamento_id === agendamentoId;
+        
+        console.log(`🎯 Verificação de referência:`);
+        console.log(`   - External Reference: "${p.external_reference}" === "${agendamentoId}" = ${hasCorrectReference}`);
+        console.log(`   - Metadata agendamento_id: "${p.metadata?.agendamento_id}" === "${agendamentoId}" = ${hasCorrectMetadata}`);
+        
+        if (hasCorrectReference || hasCorrectMetadata) {
+          pagamentoEncontrado = p;
+          console.log(`✅ PAGAMENTO CONFIRMADO COM REFERÊNCIA CORRETA!`);
+          console.log(`   - ID do pagamento MP: ${p.id}`);
+          console.log(`   - Método: ${isPix ? 'PIX' : 'CARTÃO'}`);
+          console.log(`   - Valor: R$ ${valorPagamento}`);
+          console.log(`   - Referência: ${p.external_reference || 'metadata'}`);
+          break; // Encontrou o pagamento correto, parar busca
+        } else {
+          console.log(`❌ REJEITADO: Referência não confere`);
+          console.log(`   - Esperado external_reference: "${agendamentoId}"`);
+          console.log(`   - Recebido external_reference: "${p.external_reference}"`);
+          console.log(`   - Esperado metadata.agendamento_id: "${agendamentoId}"`);
+          console.log(`   - Recebido metadata.agendamento_id: "${p.metadata?.agendamento_id}"`);
+        }
+      }
+      
+      if (!pagamentoEncontrado) {
+        console.log(`❌ NENHUM PAGAMENTO VÁLIDO ENCONTRADO`);
+        console.log(`🔒 MODO SUPER SEGURO: Só aceita pagamentos com external_reference correto`);
+        console.log(`📋 Critérios necessários:`);
+        console.log(`   - Status: approved`);
+        console.log(`   - Método: PIX ou cartão`);
+        console.log(`   - Valor: R$ ${valorEsperado}`);
+        console.log(`   - External Reference: "${agendamentoId}"`);
+        console.log(`   - OU Metadata agendamento_id: "${agendamentoId}"`);
       }
 
       if (pagamentoEncontrado) {

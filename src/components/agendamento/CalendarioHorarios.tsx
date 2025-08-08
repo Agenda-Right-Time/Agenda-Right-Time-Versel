@@ -249,17 +249,19 @@ const CalendarioHorarios: React.FC<CalendarioHorariosProps> = ({
           const isPacoteMensal = agendamento.observacoes?.includes('PACOTE MENSAL');
           
           // Verificar se tem pagamento concluído
-          const hasPaidPayment = agendamento.pagamentos?.some((p: any) => p.status === 'pago');
+          const pagamentosArray = Array.isArray(agendamento.pagamentos) ? agendamento.pagamentos : (agendamento.pagamentos ? [agendamento.pagamentos] : []);
+          const hasPaidPayment = pagamentosArray.some((p: any) => p.status === 'pago');
           
           // Para pacote mensal: verificar se há pagamento pago para qualquer agendamento do mesmo pacote
           let pacotePaid = false;
           if (isPacoteMensal && agendamento.observacoes) {
             const pacoteId = agendamento.observacoes.match(/PMT\d+/)?.[0];
             if (pacoteId && pacoteMensalAgendamentos) {
-              pacotePaid = pacoteMensalAgendamentos.some(pacoteApp => 
-                pacoteApp.observacoes?.includes(pacoteId) && 
-                pacoteApp.pagamentos?.some((p: any) => p.status === 'pago')
-              );
+              pacotePaid = pacoteMensalAgendamentos.some(pacoteApp => {
+                const pagamentosArrayPacote = Array.isArray(pacoteApp.pagamentos) ? pacoteApp.pagamentos : (pacoteApp.pagamentos ? [pacoteApp.pagamentos] : []);
+                return pacoteApp.observacoes?.includes(pacoteId) && 
+                       pagamentosArrayPacote.some((p: any) => p.status === 'pago');
+              });
             }
           }
 
@@ -270,7 +272,8 @@ const CalendarioHorarios: React.FC<CalendarioHorariosProps> = ({
               if (pacoteApp.status === 'cancelado' || pacoteApp.status === 'concluido') return false;
               
               const pacoteTime = new Date(pacoteApp.data_hora);
-              const hasPacotePago = pacoteApp.pagamentos?.some((p: any) => p.status === 'pago');
+              const pagamentosArrayConflict = Array.isArray(pacoteApp.pagamentos) ? pacoteApp.pagamentos : (pacoteApp.pagamentos ? [pacoteApp.pagamentos] : []);
+              const hasPacotePago = pagamentosArrayConflict.some((p: any) => p.status === 'pago');
               
               // Se o pacote tem pagamento pago e é no mesmo horário, bloquear
               if (hasPacotePago && isSameDay(pacoteTime, appointmentTime) && 

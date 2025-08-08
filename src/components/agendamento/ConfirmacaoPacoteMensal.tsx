@@ -167,7 +167,8 @@ const ConfirmacaoPacoteMensal: React.FC<ConfirmacaoPacoteMensalProps> = ({
         amount: valorTotal,
         description: `Pacote Mensal ${servico?.nome}`,
         merchantName: establishmentName,
-        userId: ownerId
+        userId: ownerId,
+        agendamentoId: pacoteAgendamentoId // 🎯 CRÍTICO: Garantir external_reference
       });
 
       // Criar registro de pagamento usando o primeiro agendamento do pacote

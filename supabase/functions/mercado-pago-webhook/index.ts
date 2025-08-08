@@ -23,26 +23,23 @@ serve(async (req) => {
     // Verificar se é notificação de pagamento
     if (body.type === 'payment') {
       const paymentId = body.data.id
+      console.log('🔍 Fetching payment data for ID:', paymentId)
 
-      // Buscar configuração admin do Mercado Pago
-      console.log('🔍 Buscando configuração admin do Mercado Pago...')
-      const { data: mpConfig, error: configError } = await supabaseClient
+      // PRIMEIRO: Buscar o pagamento usando admin config para identificar qual profissional
+      const { data: adminConfig, error: adminError } = await supabaseClient
         .from('admin_mercado_pago_config')
         .select('access_token')
         .single()
 
-      if (configError || !mpConfig?.access_token) {
-        console.error('❌ Admin Mercado Pago config not found:', configError)
+      if (adminError || !adminConfig?.access_token) {
+        console.error('❌ Admin Mercado Pago config not found:', adminError)
         return new Response('OK', { status: 200 })
       }
 
-      console.log('✅ Admin config found, fetching payment data...')
-      console.log('🔍 Fetching payment data for ID:', paymentId)
-
-      // Buscar dados do pagamento no Mercado Pago usando a conta admin
+      // Buscar dados do pagamento no MP para identificar o profissional
       const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
         headers: {
-          'Authorization': `Bearer ${mpConfig.access_token}`
+          'Authorization': `Bearer ${adminConfig.access_token}`
         }
       })
 
@@ -113,6 +110,7 @@ serve(async (req) => {
           console.log('🔍 Payment metadata:', paymentData.metadata)
 
           let pagamento = null;
+          let professionalConfig = null;
 
           // BUSCA ESPECÍFICA: Por external_reference OU metadata
           const agendamentoIdFromRef = paymentData.external_reference;
@@ -122,27 +120,41 @@ serve(async (req) => {
             const targetAgendamentoId = agendamentoIdFromRef || agendamentoIdFromMetadata;
             console.log('🔍 Searching payment by specific agendamento_id:', targetAgendamentoId)
             
+            // Buscar o pagamento E o agendamento para identificar o profissional
             const { data: pagamentoByRef, error: refError } = await supabaseClient
               .from('pagamentos')
-              .select('*')
+              .select('*, agendamentos!inner(user_id)')
               .eq('agendamento_id', targetAgendamentoId)
               .eq('status', 'pendente')
               .single()
 
             if (!refError && pagamentoByRef) {
               console.log('✅ Found payment by agendamento reference:', pagamentoByRef.id)
+              console.log('👤 Professional user_id:', pagamentoByRef.agendamentos.user_id)
+              
               pagamento = pagamentoByRef
+
+              // Buscar configuração específica do profissional
+              const { data: config, error: configError } = await supabaseClient
+                .from('configuracoes')
+                .select('mercado_pago_access_token')
+                .eq('user_id', pagamentoByRef.agendamentos.user_id)
+                .single()
+
+              if (!configError && config?.mercado_pago_access_token) {
+                professionalConfig = config
+                console.log('✅ Professional MP config found!')
+              } else {
+                console.log('⚠️ Professional MP config not found, using admin config')
+              }
             } else {
               console.log('ℹ️ No payment found by agendamento reference')
             }
           }
 
-          // Se não encontrou pela referência específica, NÃO buscar por valor genérico
-          // REMOVIDO: busca genérica por valor que causava confirmações errôneas
           if (!pagamento) {
             console.log('❌ Payment not found by specific agendamento reference')
-            console.log('🚫 Skipping generic value search to prevent wrong confirmations')
-            console.log('💡 Payment must have correct external_reference or metadata.agendamento_id')
+            console.log('🚫 Skipping processing - payment must have correct external_reference or metadata.agendamento_id')
           }
 
           if (pagamento) {

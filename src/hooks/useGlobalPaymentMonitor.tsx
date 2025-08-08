@@ -87,8 +87,11 @@ export const useGlobalPaymentMonitor = ({
     // Verificação inicial
     checkGlobalPayments();
 
-    // Monitor a cada 2 minutos
-    monitorRef.current = setInterval(checkGlobalPayments, 120000);
+    // Monitor SIMPLES a cada 2 segundos
+    monitorRef.current = setInterval(() => {
+      console.log('🌐 Monitor executando verificação...');
+      checkGlobalPayments();
+    }, 2000);
 
     // Listener realtime para mudanças globais
     const channelName = `global-payment-monitor-${ownerId}-${Date.now()}`;
