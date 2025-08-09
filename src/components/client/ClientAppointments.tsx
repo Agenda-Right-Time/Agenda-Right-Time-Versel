@@ -108,7 +108,7 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
           pagamentos(status, valor)
         `)
         .eq('user_id', ownerId)
-        .in('status', ['confirmado', 'pendente', 'concluido']) // Incluir concluidos para pacotes mensais
+        .in('status', ['confirmado', 'pendente', 'concluido', 'agendado']) // Incluir agendado, confirmado, pendente e concluido
         .gte('data_hora', dataAtual)
         .order('data_hora', { ascending: true });
 
@@ -198,8 +198,12 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
               
               // Determinar status do pacote baseado nos pagamentos de QUALQUER sessão do pacote
               // CORREÇÃO: Verificar pagamento em TODAS as sessões, não apenas as ativas
-              const hasPaidPayment = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pago'));
-              const hasPendingPayment = agendamentosPacote.some(a => a.pagamentos?.some((p: any) => p.status === 'pendente'));
+              const hasPaidPayment = agendamentosPacote.some(a => 
+                Array.isArray(a.pagamentos) && a.pagamentos.some((p: any) => p.status === 'pago')
+              );
+              const hasPendingPayment = agendamentosPacote.some(a => 
+                Array.isArray(a.pagamentos) && a.pagamentos.some((p: any) => p.status === 'pendente')
+              );
               
               // Filtrar sessões ativas apenas para exibição
               const sessoesAtivas = agendamentosPacote.filter(a => 
@@ -271,6 +275,13 @@ const ClientAppointments = ({ ownerId, refreshTrigger }: ClientAppointmentsProps
 
       console.log('📊 Agendamentos processados:', agendamentosProcessados.length);
       console.log('📊 Agendamentos atuais na tela:', agendamentos.length);
+      console.log('📊 Detalhes dos agendamentos:', agendamentosProcessados.map(a => ({
+        id: a.id,
+        status: a.status,
+        isPacoteMensal: a.isPacoteMensal,
+        observacoes: a.observacoes,
+        pagamentos: a.pagamentos
+      })));
       
       // Sempre atualizar a lista de agendamentos
       console.log('✅ Atualizando agendamentos na tela');

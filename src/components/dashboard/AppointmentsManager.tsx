@@ -421,10 +421,9 @@ const AppointmentsManager = () => {
   const fetchClients = async () => {
     try {
       const { data, error } = await supabase
-        .from('clientes')
-        .select('id, nome, telefone, email')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id) // FILTRAR POR PROFISSIONAL ATUAL
-        .order('nome');
+        .rpc('get_professional_clients', { 
+          professional_user_id: (await supabase.auth.getUser()).data.user?.id 
+        });
 
       if (error) throw error;
       setClients(data || []);

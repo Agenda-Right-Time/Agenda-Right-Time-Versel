@@ -66,6 +66,7 @@ const Agendamento = () => {
   const [isPacoteMensal, setIsPacoteMensal] = useState(false);
   const [config, setConfig] = useState<any>(null);
   const [cliente, setCliente] = useState<Cliente>({ nome: '', telefone: '', email: '' });
+  const [currentClienteId, setCurrentClienteId] = useState<string>(''); // Para armazenar o ID do cliente atual
   
   // Variáveis computadas
   const showDashboard = searchParams.has('dashboard') || searchParams.has('tab');
@@ -287,26 +288,47 @@ const Agendamento = () => {
         // Cliente não logado - buscar por email se fornecido, senão criar
         if (clienteData.email.trim()) {
           const { data: existingCliente } = await supabase
-            .from('clientes')
+            .from('cliente_profiles')
             .select('id')
             .eq('email', clienteData.email)
-            .eq('user_id', finalOwnerId)
-            .single();
+            .maybeSingle();
 
           if (existingCliente) {
             clienteId = existingCliente.id;
+            setCurrentClienteId(existingCliente.id); // Armazenar o ID do cliente
+            console.log('✅ Cliente existente encontrado:', clienteId);
+            
+            // Garantir associação com o profissional
+            const { error: associationError } = await supabase
+              .from('cliente_profissional_associations')
+              .upsert({
+                cliente_id: existingCliente.id,
+                profissional_id: finalOwnerId
+              }, {
+                onConflict: 'cliente_id,profissional_id'
+              });
+
+            if (associationError) {
+              console.error('❌ Erro ao criar/atualizar associação:', associationError);
+            }
+
+            // Atualizar o campo profissional_vinculado
+            await supabase
+              .from('cliente_profiles')
+              .update({ profissional_vinculado: finalOwnerId })
+              .eq('id', existingCliente.id);
           }
         }
 
         if (!clienteId) {
           console.log('📝 Criando novo cliente...');
           const { data: novoCliente, error: clienteError } = await supabase
-            .from('clientes')
+            .from('cliente_profiles')
             .insert({
               nome: clienteData.nome,
               email: clienteData.email || null,
               telefone: clienteData.telefone,
-              user_id: finalOwnerId
+              profissional_vinculado: finalOwnerId
             })
             .select('id')
             .single();
@@ -315,8 +337,22 @@ const Agendamento = () => {
             console.error("❌ Erro ao criar cliente:", clienteError);
             throw clienteError;
           }
+
+          // Criar associação
+          const { error: associationError } = await supabase
+            .from('cliente_profissional_associations')
+            .insert({
+              cliente_id: novoCliente.id,
+              profissional_id: finalOwnerId
+            });
+
+          if (associationError) {
+            console.error('❌ Erro ao criar associação:', associationError);
+          }
+
           clienteId = novoCliente.id;
-          console.log('✅ Cliente criado:', clienteId);
+          setCurrentClienteId(novoCliente.id); // Armazenar o ID do cliente
+          console.log('✅ Cliente criado e associado ao profissional:', clienteId);
         }
       }
 
@@ -488,26 +524,47 @@ const Agendamento = () => {
         // Cliente não logado - buscar por email se fornecido, senão criar
         if (clienteData.email.trim()) {
           const { data: existingCliente } = await supabase
-            .from('clientes')
+            .from('cliente_profiles')
             .select('id')
             .eq('email', clienteData.email)
-            .eq('user_id', finalOwnerId)
-            .single();
+            .maybeSingle();
 
           if (existingCliente) {
             clienteId = existingCliente.id;
+            setCurrentClienteId(existingCliente.id); // Armazenar o ID do cliente
+            console.log('✅ Cliente existente encontrado:', clienteId);
+            
+            // Garantir associação com o profissional
+            const { error: associationError } = await supabase
+              .from('cliente_profissional_associations')
+              .upsert({
+                cliente_id: existingCliente.id,
+                profissional_id: finalOwnerId
+              }, {
+                onConflict: 'cliente_id,profissional_id'
+              });
+
+            if (associationError) {
+              console.error('❌ Erro ao criar/atualizar associação:', associationError);
+            }
+
+            // Atualizar o campo profissional_vinculado
+            await supabase
+              .from('cliente_profiles')
+              .update({ profissional_vinculado: finalOwnerId })
+              .eq('id', existingCliente.id);
           }
         }
 
         if (!clienteId) {
           console.log('📝 Criando novo cliente...');
           const { data: novoCliente, error: clienteError } = await supabase
-            .from('clientes')
+            .from('cliente_profiles')
             .insert({
               nome: clienteData.nome,
               email: clienteData.email || null,
               telefone: clienteData.telefone,
-              user_id: finalOwnerId
+              profissional_vinculado: finalOwnerId
             })
             .select('id')
             .single();
@@ -516,8 +573,22 @@ const Agendamento = () => {
             console.error("❌ Erro ao criar cliente:", clienteError);
             throw clienteError;
           }
+
+          // Criar associação
+          const { error: associationError } = await supabase
+            .from('cliente_profissional_associations')
+            .insert({
+              cliente_id: novoCliente.id,
+              profissional_id: finalOwnerId
+            });
+
+          if (associationError) {
+            console.error('❌ Erro ao criar associação:', associationError);
+          }
+
           clienteId = novoCliente.id;
-          console.log('✅ Cliente criado:', clienteId);
+          setCurrentClienteId(novoCliente.id); // Armazenar o ID do cliente
+          console.log('✅ Cliente criado e associado ao profissional:', clienteId);
         }
       }
 
@@ -953,7 +1024,7 @@ const Agendamento = () => {
                 observacoes={observacoes}
                 onObservacoesChange={setObservacoes}
                 ownerId={finalOwnerId || ''}
-                clienteId={clientProfile?.id || ''}
+                clienteId={clientProfile?.id || currentClienteId}
               />
             ) : (
               selectedDateTime && (
@@ -970,7 +1041,7 @@ const Agendamento = () => {
                   observacoes={observacoes}
                   onObservacoesChange={setObservacoes}
                   ownerId={finalOwnerId || ''}
-                  clienteId={clientProfile?.id || ''}
+                  clienteId={clientProfile?.id || currentClienteId}
                 />
               )
             )}

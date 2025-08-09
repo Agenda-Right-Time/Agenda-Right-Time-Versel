@@ -47,8 +47,7 @@ const PaymentsManager = () => {
         updated_at: payment.updated_at,
         agendamentos: payment.agendamentos ? {
           data_hora: payment.agendamentos.data_hora,
-          servicos: payment.agendamentos.servicos,
-          clientes: { nome: 'Cliente' } // Simplificado para evitar erro de relação
+          servicos: payment.agendamentos.servicos
         } : null
       }));
       
@@ -154,12 +153,7 @@ const PaymentsManager = () => {
                       <div className="flex items-center">
                         <User className="h-3 w-3 mr-1 text-gold-400 flex-shrink-0" />
                         <div className="flex flex-col">
-                          <span className="truncate">{payment.agendamentos?.clientes?.nome || 'N/A'}</span>
-                          {payment.agendamentos?.clientes?.telefone && (
-                            <span className="text-xs text-gray-400 sm:hidden">
-                              {payment.agendamentos.clientes.telefone}
-                            </span>
-                          )}
+                          <span className="truncate">Cliente</span>
                         </div>
                       </div>
                     </TableCell>

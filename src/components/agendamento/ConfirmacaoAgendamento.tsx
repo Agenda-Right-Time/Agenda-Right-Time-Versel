@@ -52,13 +52,32 @@ const ConfirmacaoAgendamento: React.FC<ConfirmacaoAgendamentoProps> = ({
 }) => {
   const [percentualAntecipado, setPercentualAntecipado] = useState<number>(50);
   
-  console.log('🔍 ConfirmacaoAgendamento - dados recebidos:', { clienteId, ownerId, selectedProfissional });
+  console.log('🔍 [CONFIRMACAO DEBUG] ConfirmacaoAgendamento - dados recebidos:', { 
+    clienteId, 
+    ownerId, 
+    selectedProfissional,
+    hasClienteId: !!clienteId,
+    clienteIdType: typeof clienteId,
+    clienteIdValue: clienteId
+  });
   
   const { hasPendingAppointments, pendingAppointmentIds } = usePendingAppointments({
     clienteId: clienteId || '',
     ownerId,
     profissionalId: selectedProfissional,
     enabled: !!clienteId && !!selectedProfissional
+  });
+
+  console.log('🎯 [CONFIRMACAO DEBUG] ConfirmacaoAgendamento - resultado do hook:', { 
+    hasPendingAppointments, 
+    pendingAppointmentIds,
+    enabled: !!clienteId && !!selectedProfissional,
+    hookParams: {
+      clienteId: clienteId || '',
+      ownerId,
+      profissionalId: selectedProfissional,
+      enabled: !!clienteId && !!selectedProfissional
+    }
   });
   
   const selectedServicoData = servicos.find(s => s.id === selectedServico);

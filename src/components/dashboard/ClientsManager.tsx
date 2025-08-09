@@ -42,42 +42,16 @@ const ClientsManager = () => {
     if (!user?.id) return;
     
     try {
-      // Primeiro buscar clientes da tabela antiga (compatibilidade)
-      const { data: oldClients, error: oldError } = await supabase
-        .from('clientes')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('nome');
-
-      // Buscar clientes associados através da nova função
-      const { data: associatedClients, error: newError } = await supabase
+      // Buscar clientes associados através da função
+      const { data: associatedClients, error } = await supabase
         .rpc('get_professional_clients', { professional_user_id: user.id });
 
-      if (oldError && newError) {
-        throw oldError || newError;
+      if (error) {
+        console.error('Erro ao buscar clientes associados:', error);
+        throw error;
       }
 
-      // Combinar os dois tipos de clientes
-      const combinedClients = [
-        ...(oldClients || []),
-        ...(associatedClients || []).map(client => ({
-          id: client.id,
-          nome: client.nome,
-          telefone: client.telefone,
-          email: client.email,
-          observacoes: `Cliente registrado - ${client.total_agendamentos} agendamentos`
-        }))
-      ];
-
-      // Remover duplicatas baseado no email ou nome
-      const uniqueClients = combinedClients.filter((client, index, self) => 
-        index === self.findIndex(c => 
-          (c.email && client.email && c.email === client.email) || 
-          (c.nome === client.nome)
-        )
-      );
-
-      setClients(uniqueClients);
+      setClients(associatedClients || []);
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
       toast({
@@ -85,6 +59,8 @@ const ClientsManager = () => {
         description: "Não foi possível carregar a lista de clientes.",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -120,10 +96,13 @@ const ClientsManager = () => {
 
       if (editingClient) {
         const { error } = await supabase
-          .from('clientes')
-          .update(clientData)
-          .eq('id', editingClient.id)
-          .eq('user_id', user.id);
+          .from('cliente_profiles')
+          .update({
+            nome: formData.nome,
+            email: formData.email || null,
+            telefone: formData.telefone || null
+          })
+          .eq('id', editingClient.id);
 
         if (error) throw error;
 
@@ -132,11 +111,30 @@ const ClientsManager = () => {
           description: "As alterações foram salvas com sucesso."
         });
       } else {
-        const { error } = await supabase
-          .from('clientes')
-          .insert(clientData);
+        // Para criar novo cliente, precisamos criar na tabela cliente_profiles
+        // e associar ao profissional
+        const { data: newClient, error: insertError } = await supabase
+          .from('cliente_profiles')
+          .insert({
+            nome: formData.nome,
+            email: formData.email || null,
+            telefone: formData.telefone || null,
+            profissional_vinculado: user.id
+          })
+          .select('id')
+          .single();
 
-        if (error) throw error;
+        if (insertError) throw insertError;
+
+        // Criar associação
+        const { error: associationError } = await supabase
+          .from('cliente_profissional_associations')
+          .insert({
+            cliente_id: newClient.id,
+            profissional_id: user.id
+          });
+
+        if (associationError) throw associationError;
 
         toast({
           title: "Cliente criado! 🎉",
@@ -175,13 +173,23 @@ const ClientsManager = () => {
     if (!user?.id) return;
 
     try {
-      const { error } = await supabase
-        .from('clientes')
+      // Remover associação
+      const { error: associationError } = await supabase
+        .from('cliente_profissional_associations')
         .delete()
-        .eq('id', clientId)
-        .eq('user_id', user.id);
+        .eq('cliente_id', clientId)
+        .eq('profissional_id', user.id);
 
-      if (error) throw error;
+      if (associationError) throw associationError;
+
+      // Remover vinculação do cliente_profiles se necessário
+      const { error: profileError } = await supabase
+        .from('cliente_profiles')
+        .update({ profissional_vinculado: null })
+        .eq('id', clientId)
+        .eq('profissional_vinculado', user.id);
+
+      if (profileError) throw profileError;
 
       toast({
         title: "Cliente removido",

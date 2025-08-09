@@ -28,7 +28,7 @@ export interface Payment {
   agendamentos?: {
     data_hora: string;
     servicos?: { nome: string };
-    clientes?: { nome: string; telefone?: string };
+    cliente_profiles?: { nome: string; telefone?: string };
   } | null;
 }
 

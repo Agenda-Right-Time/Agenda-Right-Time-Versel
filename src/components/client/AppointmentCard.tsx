@@ -163,8 +163,8 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
     let realStatus = status;
     
     // Verificar se há pagamento pago
-    const hasPaidPayment = pagamentos?.some(p => p.status === 'pago');
-    const hasPendingPayment = pagamentos?.some(p => p.status === 'pendente');
+    const hasPaidPayment = Array.isArray(pagamentos) && pagamentos.some(p => p.status === 'pago');
+    const hasPendingPayment = Array.isArray(pagamentos) && pagamentos.some(p => p.status === 'pendente');
     
     // Se tem pagamento pago e status é confirmado, mostrar como confirmado
     if (hasPaidPayment && status === 'confirmado') {

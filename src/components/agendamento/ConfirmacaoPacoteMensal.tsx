@@ -58,13 +58,32 @@ const ConfirmacaoPacoteMensal: React.FC<ConfirmacaoPacoteMensalProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  console.log('🔍 ConfirmacaoPacoteMensal - dados recebidos:', { clienteId, ownerId, selectedProfissional });
+  console.log('🔍 [PACOTE DEBUG] ConfirmacaoPacoteMensal - dados recebidos:', { 
+    clienteId, 
+    ownerId, 
+    selectedProfissional,
+    hasClienteId: !!clienteId,
+    clienteIdType: typeof clienteId,
+    clienteIdValue: clienteId
+  });
 
   const { hasPendingAppointments, pendingAppointmentIds } = usePendingAppointments({
     clienteId: clienteId || '',
     ownerId,
     profissionalId: selectedProfissional,
     enabled: !!clienteId && !!selectedProfissional
+  });
+
+  console.log('🎯 [PACOTE DEBUG] ConfirmacaoPacoteMensal - resultado do hook:', { 
+    hasPendingAppointments, 
+    pendingAppointmentIds,
+    enabled: !!clienteId && !!selectedProfissional,
+    hookParams: {
+      clienteId: clienteId || '',
+      ownerId,
+      profissionalId: selectedProfissional,
+      enabled: !!clienteId && !!selectedProfissional
+    }
   });
 
   // Hook para monitorar o status do pagamento em tempo real

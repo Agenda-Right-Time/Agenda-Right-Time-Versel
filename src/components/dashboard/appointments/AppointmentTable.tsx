@@ -29,7 +29,7 @@ const AppointmentTable = ({ appointments, onDelete, deletingId, onComplete, comp
     });
     
     // Verificar se há pagamento pago para determinar status correto
-    if (appointment?.pagamentos) {
+    if (Array.isArray(appointment?.pagamentos)) {
       const hasPaidPayment = appointment.pagamentos.some((p: any) => p.status === 'pago');
       const hasPendingPayment = appointment.pagamentos.some((p: any) => p.status === 'pendente');
       
@@ -74,7 +74,7 @@ const AppointmentTable = ({ appointments, onDelete, deletingId, onComplete, comp
       }
     } else if (appointment && appointment.valor > 0) {
       // Para serviços normais, verificar se há pagamento pago
-      const hasPaidPayment = appointment.pagamentos?.some((p: any) => p.status === 'pago');
+      const hasPaidPayment = Array.isArray(appointment.pagamentos) && appointment.pagamentos.some((p: any) => p.status === 'pago');
       if (hasPaidPayment) {
         // Se tem pagamento pago, calcular 10% baseado no valor total
         const valorPago = appointment.pagamentos
@@ -199,7 +199,7 @@ const AppointmentTable = ({ appointments, onDelete, deletingId, onComplete, comp
                 ) : (
                   <>              
                       {/* Para serviços normais, mostrar valor pago baseado nos pagamentos */}
-                      {appointment?.pagamentos?.some((p: any) => p.status === 'pago') ? (
+                      {Array.isArray(appointment?.pagamentos) && appointment.pagamentos.some((p: any) => p.status === 'pago') ? (
                         <span>R$ {appointment.pagamentos
                           .filter((p: any) => p.status === 'pago')
                           .reduce((sum: number, p: any) => sum + (p.valor || 0), 0)
