@@ -132,10 +132,12 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
                     </span>
                   </SheetTitle>
                 </SheetHeader>
-                
-                <div className="mt-6 space-y-6">
-                  {/* Abas do menu */}
-                  <div>
+
+                <div className="flex-1 h-[calc(100vh-100px)] overflow-y-auto bg-background">
+                  <div className="mt-6 space-y-6 p-4">
+                    {/* Abas do menu */}
+                    <div></div>
+
                     <h3 className="text-sm font-bold bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent mb-3">DASHBOARD</h3>
                     <div className="space-y-2">
                       {menuItems.map((item) => (
