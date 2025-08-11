@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload, Image as ImageIcon, Trash2, Camera } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/hooks/useThemeManager';
 
 const EstablishmentPhotoUpload = () => {
   const [uploading, setUploading] = useState(false);
@@ -13,6 +14,7 @@ const EstablishmentPhotoUpload = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isLightTheme } = useTheme();
 
   useEffect(() => {
     if (user) {
@@ -169,6 +171,7 @@ const EstablishmentPhotoUpload = () => {
   };
 
   if (loading) {
+    
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -182,7 +185,10 @@ const EstablishmentPhotoUpload = () => {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium">Foto do Estabelecimento</Label>
+          <h4 className={`${isLightTheme ? 'text-black' : 'text-gray-300'} text-base font-semibold mb-3 flex items-center`}>
+                  <Camera className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} h-4 w-4 mr-2`} />
+                  Foto do Estabelecimento
+                </h4>
         {photoUrl && (
           <Button
             type="button"
@@ -226,13 +232,14 @@ const EstablishmentPhotoUpload = () => {
             />
             <label 
               htmlFor="photo-upload" 
-              className="flex items-center justify-center w-full h-10 px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-md cursor-pointer hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className={`${isLightTheme ? 'bg-gray-200 border-gold-800 hover:bg-gray-100' : 'bg-gray-800 border-gray-600 hover:bg-gray-700'} flex items-center justify-center w-full h-10 px-3 py-2 text-sm border rounded-md cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
+
             >
               <Upload className="h-4 w-4 mr-2" />
               {photoUrl ? 'Alterar foto' : 'Fazer upload'}
             </label>
           </div>
-          <p className="text-xs text-gray-400">
+          <p className={`${isLightTheme ? 'text-gray-600' : 'text-gray-400'} text-xs`}>
             {photoUrl ? 'Clique para alterar a foto' : 'Fazer upload da foto do estabelecimento'} • Max: 5MB
           </p>
         </div>

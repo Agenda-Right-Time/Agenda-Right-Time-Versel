@@ -293,6 +293,8 @@ export type Database = {
           dias_funcionamento: string[] | null
           horario_abertura: string | null
           horario_fechamento: string | null
+          horario_fim_almoco: string | null
+          horario_inicio_almoco: string | null
           id: string
           intervalo_agendamento: number | null
           profissional_id: string | null
@@ -305,6 +307,8 @@ export type Database = {
           dias_funcionamento?: string[] | null
           horario_abertura?: string | null
           horario_fechamento?: string | null
+          horario_fim_almoco?: string | null
+          horario_inicio_almoco?: string | null
           id?: string
           intervalo_agendamento?: number | null
           profissional_id?: string | null
@@ -317,6 +321,8 @@ export type Database = {
           dias_funcionamento?: string[] | null
           horario_abertura?: string | null
           horario_fechamento?: string | null
+          horario_fim_almoco?: string | null
+          horario_inicio_almoco?: string | null
           id?: string
           intervalo_agendamento?: number | null
           profissional_id?: string | null

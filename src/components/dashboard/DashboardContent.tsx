@@ -1,4 +1,3 @@
-
 import React from 'react';
 import TrialBanner from './TrialBanner';
 import ServicesManager from './ServicesManager';
@@ -13,14 +12,15 @@ import SaldoManager from './SaldoManager';
 import EstablishmentPhotoUpload from './EstablishmentPhotoUpload';
 import CalendarManager from './CalendarManager';
 import { CreditCard, MapPin, Percent, Settings } from 'lucide-react';
+import { useTheme } from '@/hooks/useThemeManager';
 
 // Props para o componente DashboardContent
 interface DashboardContentProps {
   activeTab: string;
-  isLightTheme?: boolean; // Prop para controlar o tema
 }
 
-const DashboardContent = ({ activeTab, isLightTheme = false }: DashboardContentProps) => {
+const DashboardContent = ({ activeTab, }: DashboardContentProps) => {
+  const { isLightTheme } = useTheme();
   const renderContent = () => {
     
     switch (activeTab) {
@@ -44,24 +44,16 @@ const DashboardContent = ({ activeTab, isLightTheme = false }: DashboardContentP
             <h3 className="text-xl font-bold">Configurações</h3>
             
             <div className="space-y-6">
-              <div className={`rounded-lg p-4 transition-colors duration-300 ${
-                isLightTheme 
-                  ? 'bg-white border-2 border-gold-500' // Tema claro - fundo branco com borda dourada
-                  : 'bg-gray-900 border border-gray-700' // Tema escuro - mantém o original
-              }`}>
-                <h4 className={`text-base font-semibold mb-4 flex items-center ${
-                  isLightTheme ? 'text-gray-800' : 'text-white' // Texto escuro no tema claro
-                }`}>
-                  <Settings className="h-4 w-4 mr-2 text-gold-400" />
+              <div className={`${isLightTheme ? 'bg-gray-300 border border-gold-800' : 'bg-gray-900 border border-gray-700'} rounded-lg p-4 transition-colors duration-300`}>
+                <h4 className={`${isLightTheme ? 'text-black' : 'text-white'} text-base font-semibold mb-4 flex items-center`}>
+                  <Settings className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} h-4 w-4 mr-2`} />
                   Configurações do Estabelecimento
                 </h4>               
                 <div className="space-y-4">
                   <div>
                     <AddressSettings />
                   </div>
-                  <div className={`pt-4 ${
-                    isLightTheme ? 'border-t border-gold-300' : 'border-t border-gray-700'
-                  }`}>
+                  <div className={`${isLightTheme ? 'border-gray-700' : 'border-gray-700'} border-t pt-4`}>
                     <EstablishmentPhotoUpload />
                   </div>
                 </div>
@@ -69,7 +61,9 @@ const DashboardContent = ({ activeTab, isLightTheme = false }: DashboardContentP
               
               <div>
                 <h4 className="text-base font-semibold mb-3 flex items-center">
-                  <Percent className="h-4 w-4 mr-2 text-gold-400" />
+                  <Percent className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} h-4 w-4 mr-2`} />
+
+
                   Configuração PIX
                 </h4>
                 <PixPercentageSettings />
@@ -77,7 +71,7 @@ const DashboardContent = ({ activeTab, isLightTheme = false }: DashboardContentP
               
               <div>
                 <h4 className="text-base font-semibold mb-3 flex items-center">
-                  <CreditCard className="h-4 w-4 mr-2 text-gold-400" />
+                  <CreditCard className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} h-4 w-4 mr-2`} />
                   Pagamentos
                 </h4>
                 <MercadoPagoSettings />
@@ -94,8 +88,7 @@ const DashboardContent = ({ activeTab, isLightTheme = false }: DashboardContentP
     <div className="container mx-auto p-4 sm:p-6">
       <div className="mb-6 sm:mb-8">
         <h2 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent">Dashboard</h2>
-        <p className={`text-sm sm:text-base ${isLightTheme ? 'text-gray-600' : 'text-gray-400' // Texto escuro no tema claro
-        }`}>Gerencie seus agendamentos, clientes e serviços</p>
+        <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-sm sm:text-base`}>Gerencie seus agendamentos, clientes e serviços</p>
       </div>
   
       <TrialBanner />

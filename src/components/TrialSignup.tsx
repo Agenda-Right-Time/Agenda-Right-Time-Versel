@@ -287,8 +287,8 @@ const TrialSignup = ({ onClose, initialLoginMode = false }: TrialSignupProps) =>
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-      <Card className="bg-gray-900 border-gray-700 p-8 max-w-md w-full relative">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 overflow-y-auto scrollbar-hide">
+      <Card className="bg-gray-900 border-gray-700 p-8 max-w-md w-full relative my-8">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"

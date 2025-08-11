@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { CreditCard, Check, AlertCircle, ExternalLink, Save, RefreshCw } from 'lucide-react';
+import { useTheme } from '@/hooks/useThemeManager';
 
 const MercadoPagoSettings = () => {
   const [accessToken, setAccessToken] = useState('');
@@ -18,6 +19,7 @@ const MercadoPagoSettings = () => {
   const [changingAccount, setChangingAccount] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isLightTheme } = useTheme();
 
   useEffect(() => {
     if (user?.id) {
@@ -306,12 +308,16 @@ const MercadoPagoSettings = () => {
   }
 
   return (
-    <Card className="bg-gray-900 border-gray-700 text-gray-400 p-6">
+    <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800 text-gray-400' : 'bg-gray-900 border-gray-700 text-gray-400'} p-6`}>
+
+
+
+
       <div className="flex items-center gap-3 mb-6">
-        <CreditCard className="h-6 w-6 text-blue-400" />
-        <h3 className="text-xl font-semibold text-blue-400">Sua Conta Mercado Pago</h3>
+        <CreditCard className={`${isLightTheme ? 'text-blue-600' : 'text-blue-400'} h-6 w-6`} />
+        <h3 className={`${isLightTheme ? 'text-blue-600' : 'text-blue-400'} text-xl font-semibold`}>Sua Conta Mercado Pago</h3>
         {isConfigured && (
-          <div className="flex items-center gap-1 text-green-400">
+          <div className={`${isLightTheme ? 'text-green-500' : 'text-green-400'} flex items-center gap-1`}>
             <Check className="h-4 w-4" />
             <span className="text-sm">Configurado</span>
           </div>
@@ -321,8 +327,11 @@ const MercadoPagoSettings = () => {
       <div className="space-y-6">
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-300">
+            <AlertCircle className={`${isLightTheme ? 'text-blue-500' : 'text-blue-400'} h-5 w-5 flex-shrink-0 mt-0.5`} />
+            <div className={`${isLightTheme ? 'text-blue-500' : 'text-blue-300'} text-sm`}>
+
+
+
               <p className="font-medium mb-2">Configure sua conta do Mercado Pago:</p>
               <p className="mb-2">
                 Recebeba de <strong>10 a 100%</strong> dos agendamentos via Pix ou Cartão.
@@ -335,11 +344,14 @@ const MercadoPagoSettings = () => {
         </div>
 
         {isConfigured && (
-          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+          <div className={`${isLightTheme ? 'bg-yellow-900/5 border-gold-800' : 'bg-yellow-600/5 border-gold-600/30'} border rounded-lg p-4`}>
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-medium text-yellow-400 mb-1">Conta já configurada</h4>
-                <p className="text-sm text-yellow-300">
+                <h4 className={`${isLightTheme ? 'text-yellow-700' : 'text-yellow-400'} font-medium mb-1`}>Conta já configurada</h4>
+                <p className={`${isLightTheme ? 'text-yellow-600' : 'text-yellow-300'} text-sm`}>
+
+
+
                   Se os pagamentos não funcionarem corretamente, tente trocar as chaves da API.
                 </p>
               </div>
@@ -358,7 +370,7 @@ const MercadoPagoSettings = () => {
 
         <div className="space-y-4">
           <div>
-            <Label className="text-blue-400" htmlFor="publicKey">Public Key *</Label>
+            <Label className={`${isLightTheme ? 'text-blue-600' : 'text-blue-400'}`} htmlFor="publicKey">Public Key *</Label>
             <Input
               id="publicKey"
               value={publicKey}
@@ -373,15 +385,15 @@ const MercadoPagoSettings = () => {
                 }
               }}
               placeholder="Ex: APP_USR-abcd1234-ef56-7890-abcd-123456789012"
-              className="bg-gray-800 border-gray-600 mt-1"
+              className={`${isLightTheme ? 'bg-gray-200 border-gold-800 text-black' : 'bg-gray-800 border-gray-600 text-white'} mt-1`}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-xs mt-1`}>
               Sua chave pública do Mercado Pago (começa com APP_USR- ou TEST-)
             </p>
           </div>
 
           <div>
-            <Label className="text-blue-400" htmlFor="accessToken">Access Token *</Label>
+            <Label className={`${isLightTheme ? 'text-blue-600' : 'text-blue-400'}`} htmlFor="accessToken">Access Token *</Label>
             <Input
               id="accessToken"
               type="password"
@@ -397,9 +409,9 @@ const MercadoPagoSettings = () => {
                 }
               }}
               placeholder="Ex: APP_USR-1234567890123456-012345-abcdef1234567890abcdef1234567890-12345678"
-              className="bg-gray-800 border-gray-600 mt-1"
+              className={`${isLightTheme ? 'bg-gray-200 border-gold-800 text-black' : 'bg-gray-800 border-gray-600 text-white'} mt-1`}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-xs mt-1`}>
               Seu token privado do Mercado Pago (começa com APP_USR- ou TEST-)
             </p>
           </div>
@@ -428,18 +440,18 @@ const MercadoPagoSettings = () => {
         {isConfigured && (
           <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Check className="h-5 w-5 text-green-400" />
-              <span className="font-medium text-green-400">Conta Configurada!</span>
+              <Check className="h-5 w-5 text-green-500" />
+              <span className="font-medium text-green-500">Conta Configurada!</span>
             </div>
-            <div className="text-sm text-green-300">
+            <div className="text-sm text-green-500">
               <p className="mb-2">Sua conta está pronta para receber pagamentos dos agendamentos.</p>
             </div>
           </div>
         )}
 
-        <div className="bg-gray-800 rounded-lg p-4">
-          <h4 className="font-medium text-gray-300 mb-2">Como obter suas chaves:</h4>
-          <ol className="text-sm text-gray-400 space-y-1 list-decimal list-inside">
+        <div className={`${isLightTheme ? 'bg-gray-200' : 'bg-gray-800'} rounded-lg p-4`}>
+          <h4 className={`${isLightTheme ? 'text-black' : 'text-white'} font-medium mb-2`}>Como obter suas chaves:</h4>
+          <ol className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-sm space-y-1 list-decimal list-inside`}>
             <li>Acesse o <strong>Painel de Desenvolvedores</strong> do Mercado Pago</li>
             <li>Faça login na sua conta</li>
             <li><strong>Crie uma nova aplicação</strong></li>
@@ -448,14 +460,9 @@ const MercadoPagoSettings = () => {
             <li>Copie o <strong>Public Key</strong> e a <strong>Access Token</strong></li>
             <li>Cole aqui e salve a configuração</li>
           </ol>
-          <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded">
-            <p className="text-xs text-yellow-300">
-              <strong>Formato das chaves:</strong> Devem começar com APP_USR- (produção) ou TEST- (sandbox/teste)
-            </p>
-          </div>
-          <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded">
-            <p className="text-xs text-blue-300">
-              <strong>Dica:</strong> Use as chaves de teste (TEST-) para experimentar e as de produção (APP_USR-) quando estiver pronto para receber pagamentos reais.
+          <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded">
+            <p className="text-xs text-blue-500">
+              <strong>Formato das chaves:</strong> Devem começar com APP_USR chaves de (produção)
             </p>
           </div>
         </div>

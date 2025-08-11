@@ -72,7 +72,7 @@ const SubscriptionManager = () => {
             </div>
           </div>
           <div className="text-right">
-            <div className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} text-2xl font-bold`}>
+            <div className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} text-md font-bold`}>
               R$ {displayPrice.toFixed(2)}
             </div>
             <div className="text-sm text-gray-500">por mês</div>

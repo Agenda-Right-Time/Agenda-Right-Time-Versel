@@ -25,6 +25,8 @@ interface CalendarSettings {
   intervalo_agendamento: number;
   dias_funcionamento: string[];
   antecedencia_minima: number;
+  horario_inicio_almoco?: string;
+  horario_fim_almoco?: string;
   profissional_id?: string;
 }
 
@@ -159,6 +161,8 @@ const CalendarManager = () => {
           intervalo_agendamento: data.intervalo_agendamento || 30,
           dias_funcionamento: data.dias_funcionamento || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
           antecedencia_minima: data.antecedencia_minima || 60,
+          horario_inicio_almoco: data.horario_inicio_almoco || '',
+          horario_fim_almoco: data.horario_fim_almoco || '',
           profissional_id: data.profissional_id
         });
       } else {
@@ -247,7 +251,9 @@ const CalendarManager = () => {
         horario_fechamento: settings.horario_fechamento,
         intervalo_agendamento: settings.intervalo_agendamento,
         dias_funcionamento: settings.dias_funcionamento,
-        antecedencia_minima: settings.antecedencia_minima
+        antecedencia_minima: settings.antecedencia_minima,
+        horario_inicio_almoco: settings.horario_inicio_almoco || null,
+        horario_fim_almoco: settings.horario_fim_almoco || null
       };
 
       if (settings.id) {
@@ -602,7 +608,7 @@ const CalendarManager = () => {
             </div>
 
           {/* Antecedência Mínima */}
-          <div>
+          <div className={`${isLightTheme ? 'text-black' : ' text-gray-400'}`}>
             <Label 
             htmlFor="antecedencia">Antecedência Mínima para Agendamento</Label>
             <Select
@@ -620,6 +626,35 @@ const CalendarManager = () => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Horário de Almoço */}
+          <div className={`${isLightTheme ? 'text-black' : ' text-gray-400'}`}>
+            <Label>Horário de Almoço</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              <div className={`${isLightTheme ? 'text-black' : ' text-gray-500'}`}>
+                <Label htmlFor="horario_inicio_almoco">Início do Almoço</Label>
+                <Input
+                  id="horario_inicio_almoco"
+                  type="time"
+                  value={settings.horario_inicio_almoco || ''}
+                  onChange={(e) => setSettings(prev => ({ ...prev, horario_inicio_almoco: e.target.value }))}
+                  className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600 text-gray-400'}`}
+                  placeholder="Ex: 12:00"
+                />
+              </div>
+              <div className={`${isLightTheme ? 'text-black' : ' text-gray-500'}`}>
+                <Label htmlFor="horario_fim_almoco">Fim do Almoço</Label>
+                <Input
+                  id="horario_fim_almoco"
+                  type="time"
+                  value={settings.horario_fim_almoco || ''}
+                  onChange={(e) => setSettings(prev => ({ ...prev, horario_fim_almoco: e.target.value }))}
+                  className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600 text-gray-400'}`}
+                  placeholder="Ex: 14:00"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Dias de Funcionamento */}

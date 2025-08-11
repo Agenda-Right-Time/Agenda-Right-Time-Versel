@@ -17,6 +17,7 @@ import {
   SidebarTrigger,
   SidebarInset
 } from '@/components/ui/sidebar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Users, 
   CreditCard, 
@@ -70,8 +71,8 @@ const AdminMobileView = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-black text-white">
-        <Sidebar className="bg-gray-900 border-gray-700">
-          <SidebarHeader className="border-b border-gray-700 p-3">
+        <Sidebar className="bg-gray-900 border-gray-700 flex flex-col">
+          <SidebarHeader className="border-b border-gray-700 p-3 flex-shrink-0">
             <div className="flex items-center space-x-2">
               <Shield className="h-6 w-6 text-red-500 flex-shrink-0" />
               <div className="flex flex-col min-w-0">
@@ -83,29 +84,31 @@ const AdminMobileView = () => {
             </div>
           </SidebarHeader>
           
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-gray-400 text-xs">Menu Administrativo</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.map((item) => (
-                    <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton
-                        onClick={() => setActiveTab(item.id)}
-                        isActive={activeTab === item.id}
-                        className="w-full text-left hover:bg-gray-800 data-[active=true]:bg-red-500 data-[active=true]:text-white text-sm"
-                      >
-                        <item.icon className="h-4 w-4 flex-shrink-0" />
-                        <span className="truncate">{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 scrollbar-hide">
+            <SidebarContent className="pb-0">
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-gray-400 text-xs">Menu Administrativo</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {menuItems.map((item) => (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          onClick={() => setActiveTab(item.id)}
+                          isActive={activeTab === item.id}
+                          className="w-full text-left hover:bg-gray-800 data-[active=true]:bg-red-500 data-[active=true]:text-white text-sm"
+                        >
+                          <item.icon className="h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">{item.title}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </div>
 
-          <SidebarFooter className="border-t border-gray-700 p-3">
+          <SidebarFooter className="border-t border-gray-700 p-3 flex-shrink-0">
             <Button 
               variant="outline" 
               size="sm" 

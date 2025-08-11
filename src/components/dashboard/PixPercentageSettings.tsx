@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Percent, Save } from 'lucide-react';
+import { useTheme } from '@/hooks/useThemeManager';
 
 const PixPercentageSettings = () => {
   const [percentualAntecipado, setPercentualAntecipado] = useState<number>(50);
@@ -14,6 +14,7 @@ const PixPercentageSettings = () => {
   const [saving, setSaving] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isLightTheme } = useTheme();
 
   const percentageOptions = [
     { value: 10, label: '10%' },
@@ -131,11 +132,15 @@ const PixPercentageSettings = () => {
   }
 
   return (
-    <Card className="bg-gray-900 border-gray-700">
+    <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
+
+
+
+
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Percent className="h-4 w-4 text-gold-400" />
-          <h5 className="text-base text-gold-400">
+          <Percent className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} h-4 w-4`} />
+          <h5 className={`${isLightTheme ? 'text-black' : 'text-gray-300'} text-base`}>
             Porcentagem PIX Antecipado
           </h5>  
         </CardTitle>
@@ -147,7 +152,7 @@ const PixPercentageSettings = () => {
             value={percentualAntecipado.toString()} 
             onValueChange={(value) => setPercentualAntecipado(parseInt(value))}
           >
-            <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+            <SelectTrigger className={`${isLightTheme ? 'bg-gray-200 border-gold-800 text-black' : 'bg-gray-800 border-gray-600 text-gray-400'}`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-gray-800 border-gray-600">
@@ -164,11 +169,11 @@ const PixPercentageSettings = () => {
           </Select>
         </div>
 
-        <div className="bg-gray-800 p-3 rounded-lg">
-          <p className="text-sm text-gray-300">
+        <div className={`${isLightTheme ? 'bg-gray-200' : 'bg-gray-800'} p-3 rounded-lg`}>
+          <p className={`${isLightTheme ? 'text-black' : 'text-gray-300'} text-sm`}>
             <strong>Exemplo:</strong> Para um serviço de R$ 100,00 com {percentualAntecipado}% antecipado:
           </p>
-          <ul className="text-sm text-gray-400 mt-2 space-y-1">
+          <ul className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-sm mt-2 space-y-1`}>
             <li>• PIX antecipado: R$ {(100 * percentualAntecipado / 100).toFixed(2)}</li>
             <li>• Pagamento presencial: R$ {(100 * (100 - percentualAntecipado) / 100).toFixed(2)}</li>
           </ul>

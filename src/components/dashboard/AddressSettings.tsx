@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin, Save, Store, Phone, Clock, Info } from 'lucide-react';
+import { useTheme } from '@/hooks/useThemeManager';
 
 const AddressSettings = () => {
   const [nomeEstabelecimento, setNomeEstabelecimento] = useState('');
@@ -25,6 +26,7 @@ const AddressSettings = () => {
   const [saving, setSaving] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isLightTheme } = useTheme();
 
   useEffect(() => {
     if (user?.id) {
@@ -176,15 +178,6 @@ const AddressSettings = () => {
 
   const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-  const intervalOptions = [
-    { value: 15, label: '15 minutos' },
-    { value: 30, label: '30 minutos' },
-    { value: 45, label: '45 minutos' },
-    { value: 60, label: '1 hora' },
-    { value: 90, label: '1 hora e 30 minutos' },
-    { value: 120, label: '2 horas' }
-  ];
-
   if (!user?.id) {
     return (
       <Card className="bg-gray-900 border-gray-700">
@@ -199,7 +192,6 @@ const AddressSettings = () => {
   }
 
   if (loading) {
-
     return (
       <Card className="bg-gray-900 border-gray-700">
         <CardContent className="p-8 text-center">
@@ -212,33 +204,14 @@ const AddressSettings = () => {
     );
   }
 
-  if (loading) {
-    return (
-      <Card className="bg-gray-900 border-gray-700">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Store className="h-5 w-5 mr-2 text-gold-400" />
-            Configurações do Estabelecimento
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-4">
-            <div className="h-10 bg-gray-800 rounded"></div>
-            <div className="h-10 bg-gray-800 rounded"></div>
-            <div className="h-10 bg-gray-800 rounded"></div>
-            <div className="h-10 bg-gray-800 rounded"></div>
-            <div className="h-10 bg-gray-800 rounded"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="bg-gray-900 border-gray-700 text-gray-400">
+    <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800 text-black' : 'bg-gray-900 border-gray-700 text-gray-400'}`}>
+
+
+
       <Label className="flex items-center gap-1 m-6">
-        <Info className="h-4 w-4 mr-1 text-gold-400" />
-        <h5 className="text-gold-400 font-medium">
+        <Info className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} h-4 w-4 mr-1`} />
+        <h5 className={`${isLightTheme ? 'text-black' : 'text-gray-300'} font-medium`}>
           Informações da página de agendamento
         </h5>
       </Label>
@@ -252,14 +225,13 @@ const AddressSettings = () => {
             value={nomeEstabelecimento}
             onChange={(e) => setNomeEstabelecimento(e.target.value)}
             placeholder="Ex: Salão Beleza & Charme"
-            className="bg-gray-800 border-gray-600 text-white"
+            className={`${isLightTheme ? 'bg-gray-200 border-gold-800 text-black' : 'bg-gray-800 border-gray-600 text-gray-400'}`}
           />
         </div>
 
         <div>
           <Label htmlFor="telefone_estabelecimento" className="flex items-center gap-1">
-            <Phone className="h-3 w-3 mr-1 text-gold-400 mb-1" />
-            <h5 className=" text-gray-400 mb-1">
+            <h5 className={`${isLightTheme ? 'text-black' : 'text-gray-400'} mb-1`}>              
             Telefone do Estabelecimento
           </h5>
           </Label>
@@ -269,7 +241,7 @@ const AddressSettings = () => {
             value={telefoneEstabelecimento}
             onChange={(e) => setTelefoneEstabelecimento(e.target.value)}
             placeholder="(11) 99999-9999"
-            className="bg-gray-800 border-gray-600 text-white"
+            className={`${isLightTheme ? 'bg-gray-200 border-gold-800 text-black' : 'bg-gray-800 border-gray-600 text-gray-400'}`}           
           />
         </div>
 
@@ -281,11 +253,10 @@ const AddressSettings = () => {
             value={endereco}
             onChange={(e) => setEndereco(e.target.value)}
             placeholder="Ex: Rua das Flores, 123 - Centro"
-            className="bg-gray-800 border-gray-600 text-white"
+            className={`${isLightTheme ? 'bg-gray-200 border-gold-800 text-black' : 'bg-gray-800 border-gray-600 text-gray-400'}`}
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="cidade">Cidade</Label>
             <Input
@@ -294,28 +265,14 @@ const AddressSettings = () => {
               value={cidade}
               onChange={(e) => setCidade(e.target.value)}
               placeholder="Ex: São Paulo"
-              className="bg-gray-800 border-gray-600 text-white"
+              className={`${isLightTheme ? 'bg-gray-200 border-gold-800 text-black' : 'bg-gray-800 border-gray-600 text-gray-400'}`}
             />
           </div>
-
-          <div>
-            <Label htmlFor="cep">CEP</Label>
-            <Input
-              id="cep"
-              type="text"
-              value={cep}
-              onChange={handleCepChange}
-              placeholder="00000-000"
-              maxLength={9}
-              className="bg-gray-800 border-gray-600 text-white"
-            />
-          </div>
-        </div>
 
         {/* Seção de Horário de Funcionamento */}
-        <div className="border-t border-gray-700 pt-6">
-          <h5 className="text-gold-400 font-medium mb-6 flex items-center">
-            <Clock className="h-4 w-4 mr-2 text-gold-400" />
+        <div className="pt-6">
+          <h5 className={`${isLightTheme ? 'text-black' : 'text-gray-300'} font-medium mb-6 flex items-center`}>
+            <Clock className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} h-4 w-4 mr-2`} />
             Horário de funcionamento
           </h5>
           
@@ -328,7 +285,7 @@ const AddressSettings = () => {
                   type="time"
                   value={horarioAbertura}
                   onChange={(e) => setHorarioAbertura(e.target.value)}
-                  className="bg-gray-800 border-gray-600 text-white"
+                  className={`${isLightTheme ? 'bg-gray-200 border-gold-800 text-black' : 'bg-gray-800 border-gray-600 text-gray-400'}`}
                 />
               </div>
               
@@ -339,21 +296,26 @@ const AddressSettings = () => {
                   type="time"
                   value={horarioFechamento}
                   onChange={(e) => setHorarioFechamento(e.target.value)}
-                  className="bg-gray-800 border-gray-600 text-white"
+                  className={`${isLightTheme ? 'bg-gray-200 border-gold-800 text-black' : 'bg-gray-800 border-gray-600 text-gray-400'}`}
                 />
               </div>
             </div>
 
             <div>
-              <Label className="text-gold-400">Dias de Funcionamento</Label>
+              <Label className={`${isLightTheme ? 'text-black' : 'text-gray-300'}`}>Dias de Funcionamento</Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-6 mb-4">
                 {dayOrder.map(day => (
                   <div key={day} className="flex items-center space-x-2">
+
                     <Checkbox
                       id={day}
                       checked={diasFuncionamento.includes(day)}
                       onCheckedChange={() => handleDayToggle(day)}
-                      className="data-[state=checked]:text-green-600"
+                      className={`border rounded ${
+                      isLightTheme
+                    ? 'text-black border-gray-400 data-[state=checked]:bg-black data-[state=checked]:text-white'
+                    : 'text-gold-500 border-gray-600 data-[state=checked]:bg-gold-500 data-[state=checked]:text-black'
+                    }`}
                     />
                     <Label htmlFor={day} className="text-sm cursor-pointer">
                       {dayNames[day]}

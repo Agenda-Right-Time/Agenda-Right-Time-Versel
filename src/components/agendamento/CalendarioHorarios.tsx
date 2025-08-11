@@ -24,6 +24,8 @@ interface HorarioConfig {
   intervalo_agendamento: number;
   antecedencia_minima: number;
   dias_funcionamento: string[];
+  horario_inicio_almoco?: string;
+  horario_fim_almoco?: string;
 }
 
 const CalendarioHorarios: React.FC<CalendarioHorariosProps> = ({
@@ -70,7 +72,7 @@ const CalendarioHorarios: React.FC<CalendarioHorariosProps> = ({
       // Buscar configurações do calendário para o profissional específico
       const { data, error } = await supabase
         .from('calendar_settings')
-        .select('horario_abertura, horario_fechamento, intervalo_agendamento, antecedencia_minima, dias_funcionamento')
+        .select('horario_abertura, horario_fechamento, intervalo_agendamento, antecedencia_minima, dias_funcionamento, horario_inicio_almoco, horario_fim_almoco')
         .eq('user_id', ownerId)
         .eq('profissional_id', profissionalId)
         .maybeSingle();
@@ -403,6 +405,21 @@ const CalendarioHorarios: React.FC<CalendarioHorariosProps> = ({
     const [openHour, openMinute] = config.horario_abertura.split(':').map(Number);
     const [closeHour, closeMinute] = config.horario_fechamento.split(':').map(Number);
 
+    // Obter horário de almoço se configurado
+    let lunchStart: Date | null = null;
+    let lunchEnd: Date | null = null;
+    
+    if (config.horario_inicio_almoco && config.horario_fim_almoco) {
+      const [lunchStartHour, lunchStartMinute] = config.horario_inicio_almoco.split(':').map(Number);
+      const [lunchEndHour, lunchEndMinute] = config.horario_fim_almoco.split(':').map(Number);
+      
+      lunchStart = new Date(date);
+      lunchStart.setHours(lunchStartHour, lunchStartMinute, 0, 0);
+      
+      lunchEnd = new Date(date);
+      lunchEnd.setHours(lunchEndHour, lunchEndMinute, 0, 0);
+    }
+
     let currentTime = new Date(date);
     currentTime.setHours(openHour, openMinute, 0, 0);
 
@@ -415,7 +432,15 @@ const CalendarioHorarios: React.FC<CalendarioHorariosProps> = ({
     while (currentTime <= lastSlotTime) {
       // Verificar se o horário é no futuro (respeitando antecedência)
       if (isAfter(currentTime, earliestTime)) {
-        slots.push(new Date(currentTime));
+        // Verificar se não está no horário de almoço
+        const isInLunchTime = lunchStart && lunchEnd && 
+          currentTime >= lunchStart && 
+          addMinutes(currentTime, servicoDuracao) > lunchStart &&
+          currentTime < lunchEnd;
+
+        if (!isInLunchTime) {
+          slots.push(new Date(currentTime));
+        }
       }
 
       // Próximo slot

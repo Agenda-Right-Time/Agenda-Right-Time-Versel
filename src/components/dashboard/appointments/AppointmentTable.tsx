@@ -6,6 +6,7 @@ import { CalendarIcon, User, Phone, Mail, X, UserCheck, Check } from 'lucide-rea
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/database';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface AppointmentTableProps {
   appointments: Appointment[];
@@ -16,6 +17,7 @@ interface AppointmentTableProps {
 }
 
 const AppointmentTable = ({ appointments, onDelete, deletingId, onComplete, completingId }: AppointmentTableProps) => {
+  const { isLightTheme } = useTheme();
   const getStatusBadge = (status: string, displayStatus: string, appointment?: Appointment) => {
     let statusToUse = displayStatus || status;
     
@@ -52,11 +54,11 @@ const AppointmentTable = ({ appointments, onDelete, deletingId, onComplete, comp
     }
     
     const styles = {
-      agendado: 'bg-green-500/20 text-green-400 border-green-500/30',
-      cancelado: 'bg-red-500/20 text-red-400 border-red-500/30',
-      pendente: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-      confirmado: 'bg-green-500/20 text-green-400 border-green-500/30',
-      concluido: 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+      agendado: 'bg-green-500/20 text-green-500 border-green-500/30',
+      cancelado: 'bg-red-500/20 text-red-500 border-red-500/30',
+      pendente: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
+      confirmado: 'bg-green-500/20 text-green-500 border-green-500/30',
+      concluido: 'bg-blue-500/20 text-blue-500 border-blue-500/30'
     };
 
     let porcentagemPaga = 0;
@@ -99,7 +101,7 @@ const AppointmentTable = ({ appointments, onDelete, deletingId, onComplete, comp
             Sessão {appointment.pacoteInfo.sequencia}/4
           </div>
         )}
-        <div className="text-xs text-gray-400 whitespace-nowrap">
+        <div className={`${isLightTheme ? 'text-brack' : 'text-gray-400'} text-xs whitespace-nowrap`}>
           {porcentagemPaga}% pago
         </div>
       </div>
@@ -110,15 +112,15 @@ const AppointmentTable = ({ appointments, onDelete, deletingId, onComplete, comp
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow className="border-gray-700">
-            <TableHead className="text-gold-400 text-xs sm:text-sm min-w-16">Data/Hora</TableHead>
-            <TableHead className="text-gold-400 text-xs sm:text-sm min-w-20">Cliente</TableHead>
-            <TableHead className="text-gold-400 text-xs sm:text-sm min-w-20">Profissional</TableHead>
-            <TableHead className="text-gold-400 text-xs sm:text-sm hidden sm:table-cell min-w-24">Contato</TableHead>
-            <TableHead className="text-gold-400 text-xs sm:text-sm min-w-20">Serviço</TableHead>
-            <TableHead className="text-gold-400 text-xs sm:text-sm min-w-16">Valor</TableHead>
-            <TableHead className="text-gold-400 text-xs sm:text-sm text-center min-w-20">Status</TableHead>
-            <TableHead className="text-gold-400 text-xs sm:text-sm w-12 min-w-12">Ações</TableHead>
+          <TableRow className={`${isLightTheme ? 'border-gold-800' : 'border-gray-700'}`}>         
+            <TableHead className={`${isLightTheme ? 'text-black' : 'text-gold-400'} text-xs sm:text-sm min-w-16`}>Data/Hora</TableHead>
+            <TableHead className={`${isLightTheme ? 'text-black' : 'text-gold-400'} text-xs sm:text-sm min-w-16`}>Cliente</TableHead>
+            <TableHead className={`${isLightTheme ? 'text-black' : 'text-gold-400'} text-xs sm:text-sm min-w-16`}>Profissional</TableHead>
+            <TableHead className={`${isLightTheme ? 'text-black' : 'text-gold-400'} text-xs sm:text-sm min-w-16`}>Contato</TableHead>
+            <TableHead className={`${isLightTheme ? 'text-black' : 'text-gold-400'} text-xs sm:text-sm min-w-16`}>Serviço</TableHead>
+            <TableHead className={`${isLightTheme ? 'text-black' : 'text-gold-400'} text-xs sm:text-sm min-w-16`}>Valor</TableHead>
+            <TableHead className={`${isLightTheme ? 'text-black' : 'text-gold-400'} text-xs sm:text-sm min-w-16`}>Status</TableHead>
+            <TableHead className={`${isLightTheme ? 'text-black' : 'text-gold-400'} text-xs sm:text-sm min-w-16`}>Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -128,14 +130,18 @@ const AppointmentTable = ({ appointments, onDelete, deletingId, onComplete, comp
             const prevDate = index > 0 ? format(new Date(appointments[index - 1].data_hora), 'dd/MM/yyyy') : null;
             const isNewDay = currentDate !== prevDate;
             
+            // Verificar se o próximo appointment é de um novo dia
+            const nextDate = index < appointments.length - 1 ? format(new Date(appointments[index + 1].data_hora), 'dd/MM/yyyy') : null;
+            const nextIsNewDay = currentDate !== nextDate;
+            
             return (
               <React.Fragment key={appointment.id}>
                 {/* Separador entre dias - sem linha cinza */}
                 {isNewDay && index > 0 && (
-                  <tr>
+                  <tr className="border-0 [&>td]:border-0">
                     <td colSpan={8} className="p-0 border-0">
                     <div 
-                      className="bg-gradient-to-r from-blue-500 to-green-500 opacity-90" 
+                      className={`${isLightTheme ? 'from-blue-500 to-green-500' : 'from-blue-500 to-green-500 opacity-90'} bg-gradient-to-r`}
                       style={{ height: '1px' }}
                     >                     
                     </div>
@@ -143,37 +149,37 @@ const AppointmentTable = ({ appointments, onDelete, deletingId, onComplete, comp
                   </tr>
                 )}
                 
-                <TableRow className="border-gray-700">
-                  <TableCell className="text-white text-xs sm:text-sm p-2">
+                <TableRow className={`${isLightTheme ? 'border-yellow-50' : 'border-gray-700'} ${nextIsNewDay ? 'border-b-0' : ''}`}>
+                  <TableCell className="text-xs sm:text-sm p-2">
                     <div className="flex flex-col">
-                      <span className="font-medium text-xs">
+                      <span className={`${isLightTheme ? 'text-black' : 'text-white'} font-medium text-xs`}>
                         {format(new Date(appointment.data_hora), 'dd/MM', { locale: ptBR })}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-xs`}>
                         {format(new Date(appointment.data_hora), 'HH:mm')}
                       </span>
                     </div>
                   </TableCell>
               
-              <TableCell className="text-white text-xs sm:text-sm p-2">
+              <TableCell className={`${isLightTheme ? 'text-black' : 'text-white'} text-xs sm:text-sm p-2`}>
                 <div className="flex items-center min-w-0">
-                  <User className="h-3 w-3 mr-1 text-gold-400 flex-shrink-0" />
+                  <User className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} h-3 w-3 mr-1 flex-shrink-0`} />
                   <span className="truncate text-xs">
                     {appointment.cliente_email?.split('@')[0] || 'N/A'}
                   </span>
                 </div>
               </TableCell>
 
-              <TableCell className="text-white text-xs sm:text-sm p-2">
+              <TableCell className={`${isLightTheme ? 'text-black' : 'text-white'} text-xs sm:text-sm p-2`}>
                 <div className="flex items-center min-w-0">
-                  <UserCheck className="h-3 w-3 mr-1 text-gold-400 flex-shrink-0" />
+                  <UserCheck className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} h-3 w-3 mr-1 flex-shrink-0`} />
                   <span className="truncate text-xs">
                     {appointment.profissionais?.nome || 'N/A'}
                   </span>
                 </div>
               </TableCell>
               
-              <TableCell className="text-gray-300 text-xs hidden sm:table-cell p-2">
+              <TableCell className={`${isLightTheme ? 'text-black' : 'text-white'} text-xs sm:text-sm p-2`}>
                 <div className="flex flex-col space-y-1">
                   {appointment.cliente_email && (
                     <div className="flex items-center text-xs">
@@ -184,11 +190,14 @@ const AppointmentTable = ({ appointments, onDelete, deletingId, onComplete, comp
                 </div>
               </TableCell>
               
-              <TableCell className="text-white text-xs sm:text-sm p-2">
+              <TableCell className={`${isLightTheme ? 'text-black' : 'text-white'} text-xs sm:text-sm p-2`}>
                 <span className="truncate text-xs block">{appointment.servicos?.nome || 'N/A'}</span>
               </TableCell>
               
-              <TableCell className="text-gold-400 font-semibold text-xs sm:text-sm p-2">
+              <TableCell className={`${isLightTheme ? 'text-gold-800' : 'text-gold-400'} font-semibold text-xs sm:text-sm p-2`}>
+
+                       
+
               <div className="text-xs">
                   {appointment?.isPacoteMensal ? (
                    appointment.status === 'pendente' || appointment.displayStatus === 'pendente' ? 
@@ -224,7 +233,7 @@ const AppointmentTable = ({ appointments, onDelete, deletingId, onComplete, comp
                       size="sm"
                       onClick={() => onComplete(appointment.id)}
                       disabled={completingId === appointment.id}
-                      className="text-green-400 hover:text-green-300 hover:bg-green-500/10 p-1 h-8 w-8"
+                      className={`${isLightTheme ? 'text-green-600' : 'text-green-400'} hover:text-green-300 hover:bg-green-500/10 p-1 h-8 w-8`}
                       title="Concluir agendamento"
                     >
                       {completingId === appointment.id ? (

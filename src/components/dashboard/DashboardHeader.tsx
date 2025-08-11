@@ -111,101 +111,103 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
       <div className="container mx-auto">
         {/* Header principal */}
         <div className="flex items-center justify-between mb-4">
-          {/* Menu mobile - Sheet no lado esquerdo */}
+          {/* Menu mobile - Sheet centralizado */}
           <div className="flex items-center space-x-3 lg:hidden">
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="border-gray-600 text-gray-900 bg-white hover:bg-gray-100">
-                  <Menu className="h-4 w-4 text-gray-900" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className={`w-80 transition-colors duration-300 ${
-                isLightTheme 
-                  ? 'bg-white border-gold-500 text-black' // Tema claro - fundo branco com borda dourada
-                  : 'bg-white border-gray-300 text-black' // Tema escuro - mantém branco como estava
-              }`}>
-                <SheetHeader className="border-b border-gray-300 pb-4">
-                  <SheetTitle className="text-left text-black flex items-center space-x-3">
-                    <Crown className="h-6 w-6 text-gold-500" />
-                    <span className="text-lg font-bold bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent">
-                      Agenda Right Time
-                    </span>
-                  </SheetTitle>
-                </SheetHeader>
+            <div className="absolute left-4">
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="border-gray-600 text-gray-900 bg-white hover:bg-gray-100">
+                    <Menu className="h-4 w-4 text-gray-900" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className={`w-80 transition-colors duration-300 ${
+                  isLightTheme 
+                    ? 'bg-white border-gold-500 text-black' // Tema claro - fundo branco com borda dourada
+                    : 'bg-white border-gray-300 text-black' // Tema escuro - mantém branco como estava
+                }`}>
+                  <SheetHeader className="border-b border-gray-300 pb-4">
+                    <SheetTitle className="text-left text-black flex items-center space-x-3">
+                      <Crown className="h-6 w-6 text-gold-500" />
+                      <span className="text-lg font-bold bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent">
+                        Agenda Right Time
+                      </span>
+                    </SheetTitle>
+                  </SheetHeader>
 
-                <div className="flex-1 h-[calc(100vh-100px)] overflow-y-auto bg-background">
-                  <div className="mt-6 space-y-6 p-4">
-                    {/* Abas do menu */}
-                    <div></div>
+                  <div className="flex-1 h-[calc(100vh-100px)] overflow-y-auto scrollbar-hide bg-background">
+                    <div className="mt-6 space-y-6 p-4">
+                      {/* Abas do menu */}
+                      <div></div>
 
-                    <h3 className="text-sm font-bold bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent mb-3">DASHBOARD</h3>
-                    <div className="space-y-2">
-                      {menuItems.map((item) => (
-                        <Button
-                          key={item.id}
-                          variant={activeTab === item.id ? "default" : "ghost"}
-                          className={`w-full justify-start text-left ${
-                            activeTab === item.id 
-                              ? 'bg-gold-500 text-black hover:bg-gold-600' 
-                              : 'text-gray-700 hover:bg-gray-100 hover:text-black'
-                          }`}
-                          onClick={() => handleTabClick(item.id)}
+                      <h3 className="text-sm font-bold bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent mb-3">DASHBOARD</h3>
+                      <div className="space-y-2">
+                        {menuItems.map((item) => (
+                          <Button
+                            key={item.id}
+                            variant={activeTab === item.id ? "default" : "ghost"}
+                            className={`w-full justify-start text-left ${
+                              activeTab === item.id 
+                                ? 'bg-gold-500 text-black hover:bg-gold-600' 
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-black'
+                            }`}
+                            onClick={() => handleTabClick(item.id)}
+                          >
+                            {item.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Links úteis */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-600 mb-3">LINKS ÚTEIS</h3>
+                      <div className="space-y-2">
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                          onClick={() => {
+                            onViewPublicBooking();
+                            setMobileMenuOpen(false);
+                          }}
                         >
-                          {item.label}
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Página Pública
                         </Button>
-                      ))}
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start text-green-600 hover:bg-green-50 hover:text-green-700"
+                          onClick={handleCopyLink}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copiar Link
+                        </Button>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Links úteis */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-600 mb-3">LINKS ÚTEIS</h3>
-                    <div className="space-y-2">
+                    {/* Controle de tema */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-600 mb-3">TEMA</h3>
+                      <div className="flex items-center justify-between">
+                        <ThemeToggle isLightTheme={isLightTheme} onToggle={toggleTheme} />
+                      </div>
+                    </div>
+
+                    {/* User info e logout */}
+                    <div className="border-t border-gray-300 pt-4">
+                      <div className="text-sm text-gray-600 mb-3 truncate">{user?.email}</div>
                       <Button 
-                        variant="ghost" 
-                        className="w-full justify-start text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                        onClick={() => {
-                          onViewPublicBooking();
-                          setMobileMenuOpen(false);
-                        }}
+                        variant="outline" 
+                        className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                        onClick={handleSignOut}
                       >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Página Pública
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start text-green-600 hover:bg-green-50 hover:text-green-700"
-                        onClick={handleCopyLink}
-                      >
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copiar Link
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sair
                       </Button>
                     </div>
                   </div>
-
-                  {/* Controle de tema */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-600 mb-3">TEMA</h3>
-                    <div className="flex items-center justify-between">
-                      <ThemeToggle isLightTheme={isLightTheme} onToggle={toggleTheme} />
-                    </div>
-                  </div>
-
-                  {/* User info e logout */}
-                  <div className="border-t border-gray-300 pt-4">
-                    <div className="text-sm text-gray-600 mb-3 truncate">{user?.email}</div>
-                    <Button 
-                      variant="outline" 
-                      className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                      onClick={handleSignOut}
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sair
-                    </Button>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+                </SheetContent>
+              </Sheet>
+            </div>
             
             <div className="flex items-center space-x-3">
               <Crown className="h-6 sm:h-8 w-6 sm:w-8 text-gold-500" />
