@@ -7,6 +7,7 @@ import { Clock, Calendar as CalendarIcon } from 'lucide-react';
 import { format, addDays, isAfter, isBefore, startOfDay, addMinutes, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface CalendarioHorariosProps {
   ownerId: string;
@@ -38,6 +39,7 @@ const CalendarioHorarios: React.FC<CalendarioHorariosProps> = ({
   const [blockedTimes, setBlockedTimes] = useState<Date[]>([]);
   const [config, setConfig] = useState<HorarioConfig | null>(null);
   const [loading, setLoading] = useState(false);
+  const { isLightTheme } = useTheme(); 
 
   // Função para verificar se é um UUID válido
   const isValidUUID = (str: string) => {
@@ -463,10 +465,10 @@ const CalendarioHorarios: React.FC<CalendarioHorariosProps> = ({
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <CalendarIcon className="h-5 w-5 text-yellow-600" />
+          <CardTitle className={`${isLightTheme ? 'text-black' : 'text-white'} flex items-center gap-2`}>
+            <CalendarIcon className="h-5 w-5 text-yellow-600" />           
             Selecione a Data
           </CardTitle>
         </CardHeader>
@@ -477,7 +479,7 @@ const CalendarioHorarios: React.FC<CalendarioHorariosProps> = ({
             onSelect={setSelectedDate}
             disabled={isDayDisabled}
             locale={ptBR}
-          className="rounded-md border border-gray-700 text-gray-400"
+            className={`${isLightTheme ? 'bg-gray-900 border-gold-500 text-gray-400' : 'border-gray-700 text-gray-400'} rounded-md border`}         
           classNames={{
           nav_button: "text-gold-500 hover:text-gold-300", 
           }}
@@ -486,10 +488,10 @@ const CalendarioHorarios: React.FC<CalendarioHorariosProps> = ({
       </Card>
 
       {selectedDate && (
-        <Card className="bg-gray-900 border-gray-700 text-white">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800 text-black' : 'bg-gray-900 border-gray-700 text-white'}`}>         
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-gold-500" />
+              <Clock className="h-5 w-5 text-yellow-600" />
               Horários para {format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })}
               {isPacoteMensal && <span className="text-purple-400 text-sm">(Pacote Mensal)</span>}
             </CardTitle>

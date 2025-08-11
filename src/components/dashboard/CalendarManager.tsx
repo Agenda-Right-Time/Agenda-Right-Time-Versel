@@ -8,7 +8,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Clock, Plus, X, Save, Settings, User } from 'lucide-react';
+import { CalendarDays, Clock, Plus, X, Save, Settings, UserCheck } from 'lucide-react';
 import { format, isBefore, startOfDay } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { pt } from 'date-fns/locale';
@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface CalendarSettings {
   id?: string;
@@ -68,6 +69,7 @@ const CalendarManager = () => {
   const [showAddTimeSlot, setShowAddTimeSlot] = useState(false);
   const [newTimeSlot, setNewTimeSlot] = useState({ startTime: '', endTime: '', reason: '' });
   const [loading, setLoading] = useState(false);
+  const { isLightTheme } = useTheme();
 
   const daysOfWeek = [
     { value: 'monday', label: 'Segunda-feira' },
@@ -501,19 +503,19 @@ const CalendarManager = () => {
       </div>
 
       {/* Seletor de Profissional */}
-      <Card>
+      <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700 text-white'}`}>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <User className="h-5 w-5 mr-2" />
+            <UserCheck className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-5 w-5 mr-2`} />
             Selecionar Profissional
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className={`${isLightTheme ? 'text-black' : ' text-gray-400'} space-y-4`}>
             <div>
               <Label htmlFor="profissional">Profissional</Label>
               <Select value={selectedProfissional} onValueChange={setSelectedProfissional}>
-                <SelectTrigger>
+                <SelectTrigger className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-white border-gray-600 text-gray-900'} hover:opacity-50`}>
                   <SelectValue placeholder="Selecione um profissional" />
                 </SelectTrigger>
                 <SelectContent>
@@ -546,44 +548,47 @@ const CalendarManager = () => {
         <div className="space-y-6">
 
       {/* Configurações Gerais */}
-      <Card>
+      <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700 text-white'}`}>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Settings className="h-5 w-5 mr-2" />
+            <Settings className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-5 w-5 mr-2`} />
             Configurações Gerais
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+
           {/* Horário de Funcionamento */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className={`${isLightTheme ? 'text-black' : ' text-gray-400'}`}>
               <Label htmlFor="horario_abertura">Horário de Abertura</Label>
               <Input
                 id="horario_abertura"
                 type="time"
                 value={settings.horario_abertura}
                 onChange={(e) => setSettings(prev => ({ ...prev, horario_abertura: e.target.value }))}
+                className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600 text-gray-400'}`}
               />
             </div>
-            <div>
+            <div className={`${isLightTheme ? 'text-black' : ' text-gray-400'}`}>
               <Label htmlFor="horario_fechamento">Horário de Fechamento</Label>
               <Input
                 id="horario_fechamento"
                 type="time"
                 value={settings.horario_fechamento}
                 onChange={(e) => setSettings(prev => ({ ...prev, horario_fechamento: e.target.value }))}
+                className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600 text-gray-400'}`}
               />
             </div>
           </div>
 
           {/* Intervalo entre Agendamentos */}
-          <div>
+          <div className={`${isLightTheme ? 'text-black' : ' text-gray-400'}`}>
             <Label htmlFor="intervalo">Intervalo entre Agendamentos</Label>
             <Select
               value={settings.intervalo_agendamento.toString()}
               onValueChange={(value) => setSettings(prev => ({ ...prev, intervalo_agendamento: parseInt(value) }))}
             >
-              <SelectTrigger>
+              <SelectTrigger className={`${isLightTheme ? 'bg-gray-200 border-gold-800 text-black' : 'bg-gray-800 border-gray-600 text-gray-400'} hover:opacity-50`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -594,16 +599,17 @@ const CalendarManager = () => {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+            </div>
 
           {/* Antecedência Mínima */}
           <div>
-            <Label htmlFor="antecedencia">Antecedência Mínima para Agendamento</Label>
+            <Label 
+            htmlFor="antecedencia">Antecedência Mínima para Agendamento</Label>
             <Select
               value={settings.antecedencia_minima.toString()}
               onValueChange={(value) => setSettings(prev => ({ ...prev, antecedencia_minima: parseInt(value) }))}
             >
-              <SelectTrigger>
+              <SelectTrigger className={`${isLightTheme ? 'bg-gray-200 border-gold-800 text-black' : 'bg-gray-800 border-gray-600 text-gray-400'} hover:opacity-50`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -621,13 +627,19 @@ const CalendarManager = () => {
             <Label>Dias de Funcionamento</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
               {daysOfWeek.map(day => (
-                <div key={day.value} className="flex items-center space-x-2">
+                <div key={day.value} className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} flex items-center space-x-2`}>
+                  
                   <Checkbox
                     id={day.value}
                     checked={settings.dias_funcionamento.includes(day.value)}
                     onCheckedChange={() => handleDayToggle(day.value)}
+                    className={`border rounded ${
+                      isLightTheme
+                    ? 'text-black border-gray-400 data-[state=checked]:bg-black data-[state=checked]:text-white'
+                    : 'text-gold-500 border-gray-600 data-[state=checked]:bg-gold-500 data-[state=checked]:text-black'
+                    }`}
                   />
-                  <Label htmlFor={day.value} className="text-sm">{day.label}</Label>
+                  <Label htmlFor={day.value} className={`${isLightTheme ? 'text-black' : 'text-gray-400'} text-sm`}>{day.label}</Label> 
                 </div>
               ))}
             </div>
@@ -636,10 +648,10 @@ const CalendarManager = () => {
       </Card>
 
       {/* Datas Fechadas */}
-      <Card>
+      <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700 text-white'}`}>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <CalendarDays className="h-5 w-5 mr-2" />
+            <CalendarDays className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-5 w-5 mr-2`} />
             Datas Fechadas
           </CardTitle>
         </CardHeader>
@@ -649,7 +661,9 @@ const CalendarManager = () => {
               <div className="flex-1">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start hover:opacity-50">
+                    <Button 
+                     variant="outline" 
+                     className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600 text-gray-400'} w-full justify-start hover:opacity-50`}>
                       <CalendarDays className="h-4 w-4 mr-2" />
                       {selectedDates.length > 0 
                         ? `${selectedDates.length} data(s) selecionada(s)`
@@ -668,18 +682,23 @@ const CalendarManager = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-              <Button onClick={addClosedDates} disabled={!selectedDates.length}>
+              <Button 
+               className={`${isLightTheme ? 'bg-gold-gradient text-black font-semibold hover:opacity-90' : 'bg-gold-gradient text-black font-semibold hover:opacity-90'}`}
+               onClick={addClosedDates} 
+               disabled={!selectedDates.length}>
                 <Plus className="h-4 w-4 mr-2" />
                 Adicionar
               </Button>
             </div>
             
             {selectedDates.length > 0 && (
-              <div className="space-y-2">
+              <div className={`${isLightTheme ? 'text-black' : 'text-gray-400'} space-y-2`}>
                 <Label>Datas selecionadas:</Label>
                 <div className="flex flex-wrap gap-2">
                   {selectedDates.map((date, index) => (
-                    <Badge key={index} variant="outline" className="flex items-center gap-1">
+                    <Badge key={index} variant="outline" className={`${isLightTheme ? 'text-black' : 'text-white'} flex items-center gap-1`}>
+
+                      
                       {format(date, 'dd/MM/yyyy')}
                       <X
                         className="h-3 w-3 cursor-pointer hover:text-red-500"
@@ -713,10 +732,10 @@ const CalendarManager = () => {
       </Card>
 
 {/* Horários Específicos Fechados */}
-<Card>
+<Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800 text-black' : 'bg-gray-900 border-gray-700 text-white'}`}>
   <CardHeader>
     <CardTitle className="flex items-center">
-      <Clock className="h-5 w-5 mr-2" />
+      <Clock className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-5 w-5 mr-2`} />
       Horários Fechados
     </CardTitle>
   </CardHeader>
@@ -726,13 +745,15 @@ const CalendarManager = () => {
         <div className="flex-1">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start hover:opacity-50">
+              <Button 
+              variant="outline" 
+              className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600 text-gray-400'} w-full justify-start hover:opacity-50`}>
                 <CalendarDays className="h-4 w-4 mr-2" />
                 {selectedTimeSlotDate
                   ? format(selectedTimeSlotDate, 'dd/MM/yyyy', { locale: pt })
                   : 'Selecionar data'}
               </Button>
-            </PopoverTrigger>
+            </PopoverTrigger >
             <PopoverContent className="w-auto p-0">
               <Calendar
                 mode="single"
@@ -751,32 +772,37 @@ const CalendarManager = () => {
       </div>
 
       {showAddTimeSlot && selectedTimeSlotDate && (
-        <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800 space-y-4">
+        <div className={`${isLightTheme ? 'text-black bg-gray-200 border-gold-800 dark:bg-gray-800' : 'text-gray-400 bg-gray-800 border-gray-600 dark:bg-gray-800'} border rounded-lg p-4 space-y-4`}>
+
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="startTime">Hora Início</Label>
               <Input
+                className={`${isLightTheme ? 'text-black' : 'text-black'}`}
                 id="startTime"
                 type="time"
                 value={newTimeSlot.startTime}
                 onChange={(e) =>
-                  setNewTimeSlot((prev) => ({ ...prev, startTime: e.target.value }))
+                setNewTimeSlot((prev) => ({ ...prev, startTime: e.target.value }))
                 }
               />
             </div>
             <div>
               <Label htmlFor="endTime">Hora Fim</Label>
               <Input
+                className={`${isLightTheme ? 'text-black' : 'text-black'}`}
                 id="endTime"
                 type="time"
                 value={newTimeSlot.endTime}
                 onChange={(e) =>
-                  setNewTimeSlot((prev) => ({ ...prev, endTime: e.target.value }))
+                setNewTimeSlot((prev) => ({ ...prev, endTime: e.target.value }))
                 }
               />
             </div>
             <div className="flex items-end">
               <Button
+                className={`${isLightTheme ? 'bg-gold-gradient text-black font-semibold hover:opacity-90' : 'bg-gold-gradient text-black font-semibold hover:opacity-90'}`}
                 onClick={() => {
                   addClosedTimeSlot();
                   setNewTimeSlot({ startTime: '', endTime: '', reason: '' });
@@ -803,12 +829,12 @@ const CalendarManager = () => {
               key={index}
               className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded"
             >
-              <span className="text-sm">
+              <span className={`${isLightTheme ? 'text-black' : 'text-black'} text-sm`} >              
                 {format(new Date(slot.date), 'dd/MM/yyyy')} - {slot.startTime} às {slot.endTime}
                 {slot.reason && ` (${slot.reason})`}
               </span>
               <X
-                className="h-4 w-4 cursor-pointer hover:text-red-500"
+                className={`${isLightTheme ? 'text-black hover:text-red-500' : 'text-black hover:text-red-500'} h-4 w-4 cursor-pointer`}               
                 onClick={() => removeClosedTimeSlot(index)}
               />
             </div>

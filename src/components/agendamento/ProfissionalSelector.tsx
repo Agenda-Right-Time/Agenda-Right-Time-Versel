@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { User } from 'lucide-react';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface Profissional {
   id: string;
@@ -22,11 +22,16 @@ const ProfissionalSelector: React.FC<ProfissionalSelectorProps> = ({
   selectedProfissional,
   onSelectProfissional
 }) => {
+const { isLightTheme } = useTheme(); 
+
   return (
-    <Card className="bg-gray-900 border-gray-700">
+    <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
+
+
+
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
-          <User className="h-5 w-5" />
+        <CardTitle className={`${isLightTheme ? 'text-black' : 'text-white'} flex items-center gap-2`}>
+          <User className="text-yellow-600 h-5 w-5" />
           Selecione o Profissional
         </CardTitle>
       </CardHeader>
@@ -38,8 +43,8 @@ const ProfissionalSelector: React.FC<ProfissionalSelectorProps> = ({
             onClick={() => onSelectProfissional(profissional.id)}
             className={`w-full justify-start p-4 h-auto ${
               selectedProfissional === profissional.id 
-                ? 'bg-white text-black border-white' 
-                : 'bg-gray-800 text-white border-gray-600 hover:bg-gray-700'
+                ? 'border-white bg-gray-600'
+                : 'bg-gray-800 text-white border-gray-700 hover:bg-gray-600 hover:border-white '
             }`}
           >
             <div className="flex items-center gap-3">

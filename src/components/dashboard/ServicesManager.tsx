@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, Edit, Trash2, Clock, DollarSign } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface Service {
   id: string;
@@ -28,6 +29,7 @@ const ServicesManager = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { isLightTheme } = useTheme();
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -227,7 +229,7 @@ const ServicesManager = () => {
         <div>
           <h3 className={`font-bold text-white ${isMobile ? 'text-xl' : 'text-2xl'}`}>Meus Serviços</h3>
           {!isMobile && (
-            <p className="text-gray-400">Gerencie seus serviços oferecidos</p>
+            <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'}`}>Gerencie seus serviços oferecidos</p>
           )}
         </div>
         <div className={`flex gap-2 ${isMobile ? 'flex-col' : 'flex-row'}`}>
@@ -259,8 +261,8 @@ const ServicesManager = () => {
       </div>
 
       {showForm && (
-        <Card className={`bg-gray-900 border-gray-700 text-gray-400 ${isMobile ? 'p-4' : 'p-6'}`}>
-          <h4 className={`font-semibold mb-4 text-white ${isMobile ? 'text-lg' : 'text-xl'}`}>
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800 text-gray-900' : 'bg-gray-900 border-gray-700 text-gray-400'} ${isMobile ? 'p-4' : 'p-6'}`}>
+          <h4 className={`${isLightTheme ? 'font-semibold mb-4 text-black' : 'font-semibold mb-4 text-white'} ${isMobile ? 'text-lg' : 'text-xl'}`}>
             {editingService 
               ? (isPacoteMensal ? 'Editar Pacote Mensal' : 'Editar Serviço')
               : (isPacoteMensal ? 'Novo Pacote Mensal' : 'Novo Serviço')
@@ -276,7 +278,7 @@ const ServicesManager = () => {
                   id="nome"
                   value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  className={`bg-gray-800 border-gray-600 ${isMobile ? 'text-sm' : ''}`}
+                  className={`bg-gray-800 border-gray-600 text-gray-400 ${isLightTheme ? 'bg-gray-200 border-gold-800 text-gray-900' : ''} ${isMobile ? 'text-sm' : ''}`}
                   placeholder={isPacoteMensal ? "Ex: Manutenção Completa" : "Ex: Corte de Cabelo"}
                   required
                 />
@@ -289,7 +291,7 @@ const ServicesManager = () => {
                   step="0.01"
                   value={formData.preco}
                   onChange={(e) => setFormData({ ...formData, preco: e.target.value })}
-                  className={`bg-gray-800 border-gray-600 ${isMobile ? 'text-sm' : ''}`}
+                  className={`bg-gray-800 border-gray-600 text-gray-400 ${isLightTheme ? 'bg-gray-200 border-gold-800 text-gray-900' : ''} ${isMobile ? 'text-sm' : ''}`}
                   placeholder={isPacoteMensal ? "150.00" : "50.00"}
                   required
                 />
@@ -305,7 +307,7 @@ const ServicesManager = () => {
                 type="number"
                 value={formData.duracao}
                 onChange={(e) => setFormData({ ...formData, duracao: e.target.value })}
-                className={`bg-gray-800 border-gray-600 ${isMobile ? 'text-sm' : ''}`}
+                className={`bg-gray-800 border-gray-600 text-gray-400 ${isLightTheme ? 'bg-gray-200 border-gold-800 text-gray-900' : ''} ${isMobile ? 'text-sm' : ''}`}
                 placeholder="60"
                 required
               />
@@ -317,7 +319,7 @@ const ServicesManager = () => {
                 id="descricao"
                 value={formData.descricao}
                 onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                className={`bg-gray-800 border-gray-600 ${isMobile ? 'text-sm' : ''}`}
+                className={`bg-gray-800 border-gray-600 text-gray-400 ${isLightTheme ? 'bg-gray-200 border-gold-800 text-gray-900' : ''} ${isMobile ? 'text-sm' : ''}`}
                 placeholder={isPacoteMensal ? "Descreva o que inclui no pacote mensal..." : "Descreva o serviço..."}
                 rows={isMobile ? 2 : 3}
               />
@@ -331,7 +333,8 @@ const ServicesManager = () => {
                   setShowForm(false);
                   setIsPacoteMensal(false);
                 }}
-                className={`border-gray-600 ${isMobile ? 'text-sm' : ''}`}
+                className={`border-gray-600  ${isLightTheme ? 'border-gold-800' : 'text-gray-900'} ${isMobile ? 'text-sm' : ''}`}
+                
               >
                 Cancelar
               </Button>
@@ -352,10 +355,14 @@ const ServicesManager = () => {
 
       <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'} gap-4 sm:gap-6`}>
         {services.map((service) => (
-          <Card key={service.id} className={`bg-gray-900 border-gray-700 ${isMobile ? 'p-4' : 'p-6'}`}>
+
+          <Card key={service.id} className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'} ${isMobile ? 'p-4' : 'p-6'}`}>
+
+                 
+
             <div className="flex justify-between items-start mb-3 sm:mb-4">
               <div className="flex-1 min-w-0">
-                <h4 className={`font-semibold text-white truncate ${isMobile ? 'text-base' : 'text-lg'}`}>{service.nome}</h4>
+                <h4 className={`${isLightTheme ? 'text-black' : 'text-white'} ${isMobile ? 'text-base' : 'text-lg'} font-semibold truncate`}>{service.nome}</h4>
                 {service.nome.includes('[PACOTE MENSAL]') && (
                   <span className={`inline-block mt-1 px-2 py-1 bg-purple-600 text-white rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}>
                     Pacote Mensal
@@ -383,15 +390,19 @@ const ServicesManager = () => {
             </div>
             
             {service.descricao && (
-              <p className={`text-gray-400 mb-3 sm:mb-4 ${isMobile ? 'text-xs' : 'text-sm'}`}>{service.descricao}</p>
+              <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} ${isMobile ? 'text-xs' : 'text-sm'} mb-3 sm:mb-4`}>{service.descricao}</p>
             )}
+
             
             <div className={`flex justify-between items-center ${isMobile ? 'text-sm' : ''}`}>
-              <div className="flex items-center text-gold-400">
+              <div className={`${isLightTheme ? 'text-green-600' : 'text-gold-400'} ${isMobile ? 'text-sm' : ''} flex items-center`}>
+
+
+
                 <DollarSign className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1'}`} />
                 <span className="font-semibold">R$ {service.preco.toFixed(2)}</span>
               </div>
-              <div className="flex items-center text-gray-400">
+              <div className="flex items-center text-gray-500">
                 <Clock className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1'}`} />
                 <span>{service.duracao}min</span>
               </div>
@@ -401,10 +412,10 @@ const ServicesManager = () => {
       </div>
 
       {services.length === 0 && (
-        <Card className={`bg-gray-900 border-gray-700 ${isMobile ? 'p-6' : 'p-8'} text-center`}>
-          <Clock className={`${isMobile ? 'h-8 w-8' : 'h-12 w-12'} text-gray-500 mx-auto mb-4`} />
-          <h4 className={`font-semibold mb-2 text-white ${isMobile ? 'text-base' : 'text-lg'}`}>Nenhum serviço cadastrado</h4>
-          <p className={`text-gray-400 mb-4 ${isMobile ? 'text-sm' : ''}`}>
+        <Card className={`bg-gray-900 border-gray-700 ${isLightTheme ? 'bg-gray-300 border-gold-800' : ''} ${isMobile ? 'p-6' : 'p-8'} text-center`}>
+          <Clock className={`${isLightTheme ? 'text-black' : 'text-white'} h-12 w-12 mx-auto mb-4`} />
+          <h4 className={`${isLightTheme ? 'text-black' : 'text-white'} text-lg font-semibold mb-2`}>Nenhum serviço cadastrado</h4>
+          <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} ${isMobile ? 'text-sm' : ''} mb-4`}>
             Comece criando seus primeiros serviços para oferecer aos clientes.
           </p>
           <div className={`flex gap-2 sm:gap-3 justify-center ${isMobile ? 'flex-col' : ''}`}>

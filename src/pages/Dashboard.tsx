@@ -10,8 +10,11 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardContent from '@/components/dashboard/DashboardContent';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+// Importação do provider de tema profissional
+import { GlobalThemeProvider, useTheme } from '@/hooks/useThemeManager';
 
-const Dashboard = () => {
+// Componente interno que usa o tema
+const DashboardContent_ = () => {
   // TODOS OS HOOKS DEVEM ser declarados primeiro, antes de qualquer early return
   const { user, loading: authLoading } = useAuth();
   const { hasValidAccess, loading: subscriptionLoading, refetch } = useSubscription();
@@ -21,6 +24,9 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [empresaSlug, setEmpresaSlug] = useState<string>('');
   const [accessChecked, setAccessChecked] = useState(false);
+  
+  // Hook para gerenciar o tema do dashboard profissional
+  const { isLightTheme } = useTheme();
 
   // Verificar se voltou do pagamento com sucesso
   useEffect(() => {
@@ -272,14 +278,27 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isLightTheme 
+        ? 'bg-white text-black' // Tema claro - fundo branco com texto escuro
+        : 'bg-black text-white' // Tema escuro - mantém o original
+    }`}>
       <DashboardHeader 
         onViewPublicBooking={handleViewPublicBooking} 
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />
-      <DashboardContent activeTab={activeTab} />
+      <DashboardContent activeTab={activeTab} isLightTheme={isLightTheme} />
     </div>
+  );
+};
+
+// Componente Dashboard com provider de tema
+const Dashboard = () => {
+  return (
+    <GlobalThemeProvider>
+      <DashboardContent_ />
+    </GlobalThemeProvider>
   );
 };
 

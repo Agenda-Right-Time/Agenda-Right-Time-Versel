@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { Check, ArrowLeft } from 'lucide-react';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface ProgressIndicatorProps {
   currentStep: number;

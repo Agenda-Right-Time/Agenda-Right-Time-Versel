@@ -12,6 +12,7 @@ import { startOfDay } from 'date-fns';
 import { Appointment } from '@/types/database';
 import AppointmentForm from './appointments/AppointmentForm';
 import AppointmentTable from './appointments/AppointmentTable';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface Service {
   id: string;
@@ -45,6 +46,7 @@ const AppointmentsManager = () => {
   const [searchEmail, setSearchEmail] = useState<string>('');
   const [searchDate, setSearchDate] = useState<string>('');
   const { toast } = useToast();
+  const { isLightTheme } = useTheme();
 
   useEffect(() => {
     cleanupOldAppointments();
@@ -722,7 +724,7 @@ const AppointmentsManager = () => {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h3 className="text-xl sm:text-2xl font-bold">Agendamentos</h3>
-          <p className="text-gray-400 text-sm">
+          <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-sm`}>
             {selectedProfessional === 'todos' 
               ? `Total: ${appointments.length} agendamentos` 
               : `${selectedProfessionalName}: ${filteredAppointments.length} agendamentos`
@@ -741,11 +743,11 @@ const AppointmentsManager = () => {
       {/* Filtros */}
       <div className="space-y-4">
         {/* Filtro de Profissionais */}
-        <Card className="bg-gray-900 border-gray-700 p-4">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'} p-4`}>
           <div className="flex flex-col sm:flex-row gap-4 items-center">
             <div className="flex items-center gap-2">
-              <UserCheck className="h-5 w-5 text-gold-500" />
-              <Label className="text-white font-medium">Filtrar por Profissional:</Label>
+              <UserCheck className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-5 w-5`} />
+              <Label className={`${isLightTheme ? 'text-gray-500' : 'text-white'} font-medium`}>Filtrar por Profissional:</Label>
             </div>
             <Select value={selectedProfessional} onValueChange={setSelectedProfessional}>
               <SelectTrigger className="bg-white border-gray-300 text-black w-full sm:w-64">
@@ -771,11 +773,11 @@ const AppointmentsManager = () => {
         </Card>
 
         {/* Filtros de Busca */}
-        <Card className="bg-gray-900 border-gray-700 p-4">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'} p-4`}>
           <div className="flex flex-col sm:flex-row gap-4 items-center">
             <div className="flex items-center gap-2">
-              <Search className="h-5 w-5 text-gold-500" />
-              <Label className="text-white font-medium">Buscar Agendamentos:</Label>
+              <Search className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-5 w-5`} />
+              <Label className={`${isLightTheme ? 'text-gray-500' : 'text-white'} font-medium`}>Buscar Agendamentos:</Label>             
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <div className="relative">
@@ -819,9 +821,9 @@ const AppointmentsManager = () => {
           </div>
           {(searchEmail || searchDate) && (
             <div className="mt-3 pt-3 border-t border-gray-700">
-              <p className="text-sm text-gray-400">
+              <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-sm`}>
                 📝 Filtros ativos: {searchEmail && `email "${searchEmail}"`} {searchEmail && searchDate && ' + '} {searchDate && `data ${new Date(searchDate).toLocaleDateString('pt-BR')}`}
-                <span className="text-gold-500 ml-2">• Mostrando últimos 30 dias</span>
+                <span className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} ml-2`}>• Mostrando últimos 30 dias</span>
               </p>
             </div>
           )}
@@ -838,7 +840,7 @@ const AppointmentsManager = () => {
         />
       )}
 
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
         <div className="p-4 sm:p-6">
           {sortedAppointments.length > 0 ? (
             <AppointmentTable
@@ -850,14 +852,15 @@ const AppointmentsManager = () => {
             />
           ) : (
             <div className="text-center py-8">
-              <CalendarIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-              <h4 className="text-lg text-white font-semibold mb-2">
+              <CalendarIcon className={`${isLightTheme ? 'text-black' : 'text-white'} h-12 w-12 mx-auto mb-4`} />
+              <h4 className={`${isLightTheme ? 'text-black' : 'text-white'} text-lg font-semibold mb-2`}>
+                
                 {selectedProfessional === 'todos' 
                   ? 'Nenhum agendamento encontrado' 
                   : `Nenhum agendamento encontrado para ${selectedProfessionalName}`
                 }
               </h4>
-              <p className="text-gray-400 mb-4 text-sm">
+              <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} mb-4 text-sm`}>
                 {selectedProfessional === 'todos'
                   ? 'Os agendamentos aparecem aqui assim que são criados pelos clientes ou pela dashboard.'
                   : `Este profissional ainda não possui agendamentos.`

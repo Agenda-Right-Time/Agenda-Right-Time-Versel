@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, DollarSign, Package, Sparkles } from 'lucide-react';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface Servico {
   id: string;
@@ -18,19 +18,22 @@ interface ServicoSelectorProps {
   onSelectServico: (servicoId: string) => void;
 }
 
+
 const ServicoSelector: React.FC<ServicoSelectorProps> = ({
   servicos,
   selectedServico,
   onSelectServico
 }) => {
+const { isLightTheme } = useTheme(); 
+  
   return (
-    <Card className="bg-gray-900 border-gray-700">
+    <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className={`${isLightTheme ? 'text-black' : 'text-white'} flex items-center gap-2`}>         
           <Sparkles className="h-5 w-5 text-yellow-600" />
           Escolha o Serviço
         </CardTitle>
-        <p className="text-gray-400">Selecione o serviço que você deseja agendar</p>
+        <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'}`}>Selecione o serviço que você deseja agendar</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
@@ -42,11 +45,18 @@ const ServicoSelector: React.FC<ServicoSelectorProps> = ({
               <div
                 key={servico.id}
                 onClick={() => onSelectServico(servico.id)}
-                className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                  isSelected 
-                    ? 'border-yellow-500 bg-yellow-500/10' 
-                    : 'border-gray-600 bg-gray-800 hover:border-gray-500 hover:bg-gray-750'
-                }`}
+                className={`
+  p-4 rounded-lg border cursor-pointer transition-all
+  ${
+    isLightTheme
+      ? isSelected
+        ? 'border-yellow-600 bg-gray-600'
+        : 'bg-gray-800 border-gold-500 hover:bg-gray-600 hover:border-gold-700 '
+      : isSelected
+        ? 'border-yellow-500 bg-yellow-500/10'
+        : 'border-gray-600 bg-gray-800 hover:border-gray-500 hover:bg-gray-700'
+  }
+`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -54,9 +64,9 @@ const ServicoSelector: React.FC<ServicoSelectorProps> = ({
                       {isPacoteMensal ? (
                         <Package className="h-4 w-4 text-purple-400" />
                       ) : (
-                        <Sparkles className="h-4 w-4 text-yellow-600" />
+                        <Sparkles className="h-4 w-4 text-yellow-500" />
                       )}
-                      <span className={`font-semibold ${isPacoteMensal ? 'text-purple-200' : 'text-yellow-200'}`}>
+                      <span className={`font-semibold ${isPacoteMensal ? 'text-purple-400' : 'text-gold-500'}`}>
                         {servico.nome.replace('[PACOTE MENSAL] ', '')}
                       </span>
                       {isPacoteMensal && (
@@ -78,8 +88,11 @@ const ServicoSelector: React.FC<ServicoSelectorProps> = ({
                     </div>
                     
                     {servico.descricao && (
-                      <p className="text-sm text-gray-400">{servico.descricao}</p>
+                      <p className="text-sm text-gray-500">{servico.descricao}</p>
                     )}
+
+                                 
+
                     
                     {isPacoteMensal && (
                       <div className="text-sm text-purple-300 mt-2 font-medium">

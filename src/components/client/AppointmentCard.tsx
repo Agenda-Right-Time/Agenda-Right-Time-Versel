@@ -183,8 +183,8 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
       agendado: { label: 'Agendado', variant: 'default' as const },
       confirmado: { label: 'Confirmado', variant: 'secondary' as const },
       cancelado: { label: 'Cancelado', variant: 'destructive' as const },
-      concluido: { label: 'Concluído', variant: 'outline' as const },
-      pendente: { label: 'Pendente', variant: 'outline' as const }
+      concluido: { label: 'Concluído', variant: 'secondary' as const },
+      pendente: { label: 'Pendente', variant: 'secondary' as const }
     };
 
     const config = statusConfig[realStatus as keyof typeof statusConfig] || { label: realStatus, variant: 'default' as const };
@@ -335,148 +335,6 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
             </div>
           </div>
         )}
-
-        {/* Card do agendamento normal */}
-        <Card className="bg-gray-900 border-gray-700">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg text-white">
-                {agendamento.servicos.nome}
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                {getStatusBadge(agendamento.status, agendamento.pagamentos)}
-                {(canCancel || canCancelPending) && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onCancel(agendamento.id)}
-                    disabled={isCancelling}
-                    className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                  >
-                    {isCancelling ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
-                    ) : (
-                      <>
-                        <X className="h-4 w-4 mr-1" />
-                        Cancelar
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Data e Hora */}
-            <div className="flex items-center gap-2 text-gray-300">
-              <Calendar className="h-4 w-4 text-gold-500" />
-              <span>
-                {format(new Date(agendamento.data_hora), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 text-gray-300">
-              <Clock className="h-4 w-4 text-gold-500" />
-              <span>
-                {format(new Date(agendamento.data_hora), 'HH:mm')} 
-                ({agendamento.servicos.duracao} min)
-              </span>
-            </div>
-
-            {/* Profissional */}
-            <div className="flex items-center gap-2 text-gray-300">
-              <User className="h-4 w-4 text-gold-500" />
-              <span>{agendamento.profissionais.nome}</span>
-              {agendamento.profissionais.especialidade && (
-                <span className="text-gray-500">
-                  - {agendamento.profissionais.especialidade}
-                </span>
-              )}
-            </div>
-
-            {/* Valor e Status do Pagamento */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-gray-300">
-                <DollarSign className="h-4 w-4 text-gold-500" />
-                <span>R$ {agendamento.valor?.toFixed(2)}</span>
-              </div>
-              <span className={`text-sm font-medium ${paymentStatus.color}`}>
-                {paymentStatus.status}
-              </span>
-            </div>
-
-            {/* Botão de Pagamento PIX para agendamentos pendentes */}
-            {paymentStatus.status === 'Pendente' && (
-              <div className="bg-yellow-900/20 p-4 rounded-lg border-l-4 border-yellow-500">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <QrCode className="h-5 w-5 text-yellow-500" />
-                    <span className="text-yellow-300 font-medium">Pagamento pendente</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={generatePixPayment}
-                      disabled={isGeneratingPayment}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
-                    >
-                      {isGeneratingPayment ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
-                      ) : (
-                        <>
-                          <QrCode className="h-4 w-4 mr-2" />
-                          PIX
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      onClick={handleCardPayment}
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-medium"
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Cartão
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onCancel(agendamento.id)}
-                      disabled={isCancelling}
-                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                    >
-                      {isCancelling ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
-                      ) : (
-                        <>
-                          <X className="h-4 w-4 mr-1" />
-                          Cancelar
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-xs text-yellow-400 mt-2">
-                  Confirme seu agendamento escolhendo PIX ou cartão de crédito/débito
-                </p>
-              </div>
-            )}
-
-            {/* Observações */}
-            {agendamento.observacoes && (
-              <div className="flex items-start gap-2 text-gray-300">
-                <MessageSquare className="h-4 w-4 text-gold-500 mt-0.5 flex-shrink-0" />
-                <span className="text-sm">{agendamento.observacoes}</span>
-              </div>
-            )}
-
-            {/* Aviso sobre cancelamento - apenas para agendamentos normais */}
-            {!canCancel && (agendamento.status === 'agendado' || agendamento.status === 'confirmado') && (
-              <div className="text-xs text-amber-400 bg-amber-900/20 p-3 rounded border-l-4 border-amber-500">
-                ⚠️ Cancelamento disponível apenas até 2 dias (48h) antes do agendamento
-                <br />
-                ℹ️ Para cancelar após esse prazo, entre em contato com o profissional
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </>
     );
   }
@@ -573,9 +431,28 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
                 <Package className="h-5 w-5 text-purple-400" />
                 {agendamento.servicos.nome}
               </CardTitle>
+              <div className="flex items-center gap-3">
               <Badge variant="secondary" className="bg-purple-500/20 text-purple-200 text-xs whitespace-nowrap">
                 Pacote Mensal
               </Badge>
+              {paymentStatus.status === 'Pendente' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onCancel(agendamento.id)}
+                      disabled={isCancelling}
+                      className="h-6 w-6 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                    >
+                      {isCancelling ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                      ) : (
+                        <>
+                          <X className="h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                    )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -629,22 +506,6 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
                     >
                       <CreditCard className="h-4 w-4 mr-2" />
                       Cartão
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onCancel(agendamento.id)}
-                      disabled={isCancelling}
-                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                    >
-                      {isCancelling ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
-                      ) : (
-                        <>
-                          <X className="h-4 w-4 mr-1" />
-                          Cancelar
-                        </>
-                      )}
                     </Button>
                   </div>
                 </div>
@@ -831,14 +692,13 @@ const AppointmentCard = ({ agendamento, onCancel, isCancelling, ownerId, onPayme
                   size="sm"
                   onClick={() => onCancel(agendamento.id)}
                   disabled={isCancelling}
-                  className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                  className="h-6 w-6 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
                 >
                   {isCancelling ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
                   ) : (
                     <>
                       <X className="h-4 w-4" />
-                      Cancelar
                     </>
                   )}
                 </Button>

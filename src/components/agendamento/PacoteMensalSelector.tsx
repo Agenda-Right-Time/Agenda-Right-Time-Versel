@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Clock, Calendar as CalendarIcon, X } from 'lucide-react';
 import { format, addDays, isAfter, isBefore, startOfDay, addMinutes, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface PacoteMensalSelectorProps {
   ownerId: string;
@@ -37,6 +37,7 @@ const PacoteMensalSelector: React.FC<PacoteMensalSelectorProps> = ({
   const [config, setConfig] = useState<HorarioConfig | null>(null);
   const [loading, setLoading] = useState(false);
   const [closedDates, setClosedDates] = useState<string[]>([]);
+  const { isLightTheme } = useTheme();
 
   // Função para verificar se é um UUID válido
   const isValidUUID = (str: string) => {
@@ -455,10 +456,10 @@ const PacoteMensalSelector: React.FC<PacoteMensalSelectorProps> = ({
     <div className="space-y-6">
       {/* Mostrar horários selecionados */}
       {selectedDateTimes.length > 0 && (
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
           <CardHeader>
-            <CardTitle className="flex items-center text-white gap-2">
-              <Clock className="h-5 w-5 text-purple-500" />
+            <CardTitle className={`${isLightTheme ? 'text-black' : 'text-white'} flex items-center gap-2`}>
+              <Clock className="h-5 w-5 text-purple-600" />
               Horários Selecionados ({selectedDateTimes.length}/4)
             </CardTitle>
           </CardHeader>
@@ -467,10 +468,10 @@ const PacoteMensalSelector: React.FC<PacoteMensalSelectorProps> = ({
               {selectedDateTimes.map((dateTime, index) => (
                 <div key={index} className="flex items-center justify-between bg-purple-900/20 border border-purple-500/30 rounded-lg p-3">
                   <div>
-                    <p className="font-medium text-purple-300">
+                    <p className={`${isLightTheme ? 'text-purple-500' : 'text-purple-300'} font-medium`}>
                       {format(dateTime, 'dd/MM/yyyy', { locale: ptBR })}
                     </p>
-                    <p className="text-sm text-gray-400">
+                    <p className={`${isLightTheme ? 'text-gray-600' : 'text-gray-400'} text-sm`}>
                       {format(dateTime, 'HH:mm')}
                     </p>
                   </div>
@@ -489,10 +490,10 @@ const PacoteMensalSelector: React.FC<PacoteMensalSelectorProps> = ({
         </Card>
       )}
 
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <CalendarIcon className="h-5 w-5 text-purple-500" />
+          <CardTitle className={`${isLightTheme ? 'text-black' : 'text-white'} flex items-center gap-2`}>  
+            <CalendarIcon className="h-5 w-5 text-purple-600" />
             Selecione 4 Datas
           </CardTitle>
         </CardHeader>
@@ -503,7 +504,7 @@ const PacoteMensalSelector: React.FC<PacoteMensalSelectorProps> = ({
             onSelect={setSelectedDate}
             disabled={isDayDisabled}
             locale={ptBR}
-            className="rounded-md border border-gray-700 text-gray-400"
+            className={`${isLightTheme ? 'bg-gray-900 border-gold-500 text-gray-400' : 'border-gray-700 text-gray-400'} rounded-md border`}
             classNames={{
             nav_button: "text-purple-500 hover:text-purple-300", 
             }}
@@ -512,10 +513,10 @@ const PacoteMensalSelector: React.FC<PacoteMensalSelectorProps> = ({
       </Card>
 
       {selectedDate && (
-        <Card className="bg-gray-900 border-gray-700 text-white">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800 text-black' : 'bg-gray-900 border-gray-700 text-white'}`}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-purple-500" />
+              <Clock className="h-5 w-5 text-purple-600" />
               Horários para {format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })}
             </CardTitle>
           </CardHeader>
@@ -564,8 +565,12 @@ const PacoteMensalSelector: React.FC<PacoteMensalSelectorProps> = ({
 
       {selectedDateTimes.length === 4 && (
         <div className="text-center p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
-          <p className="text-purple-300 font-medium">
+          <p className={`${isLightTheme ? 'text-purple-500' : 'text-purple-300'} font-medium`}>
             ✅ Você selecionou todos os 4 horários necessários para o pacote mensal!
+
+
+
+
           </p>
         </div>
       )}

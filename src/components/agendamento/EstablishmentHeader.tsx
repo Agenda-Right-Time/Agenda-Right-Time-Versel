@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { Star, ImageIcon } from 'lucide-react';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface EstablishmentData {
   nome: string;
@@ -21,6 +22,7 @@ const EstablishmentHeader = ({ ownerId }: EstablishmentHeaderProps) => {
   const [establishment, setEstablishment] = useState<EstablishmentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { isLightTheme } = useTheme();
 
   // Função para verificar se é um UUID válido
   const isValidUUID = (str: string) => {
@@ -171,7 +173,7 @@ const EstablishmentHeader = ({ ownerId }: EstablishmentHeaderProps) => {
 
   return (
     <div className="flex justify-center mb-8">
-      <Card className="bg-gradient-to-b from-gray-900 to-gray-800 border-gold-500/20 shadow-xl w-full max-w-md">
+      <Card className={`${isLightTheme ? 'from-gray-300 to-gray-800 border-gold-800' : 'from-gray-900 to-gray-800 border-gold-500/20'} bg-gradient-to-b shadow-xl w-full max-w-md`}> 
         <CardContent className="p-6">
           <div className="flex flex-col items-center space-y-4">
             {/* Foto do estabelecimento */}

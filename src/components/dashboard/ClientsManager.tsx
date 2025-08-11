@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, User, Phone, Mail, Edit, Trash2 } from 'lucide-react';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface Client {
   id: string;
@@ -24,6 +25,7 @@ const ClientsManager = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isLightTheme } = useTheme();
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -224,7 +226,7 @@ const ClientsManager = () => {
       </div>
 
       {showForm && (
-        <Card className="bg-gray-900 border-gray-700 p-6 text-gray-400">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700 text-gray-400'} p-6`}>
           <h4 className="text-xl font-semibold mb-4 text-white">
             {editingClient ? 'Editar Cliente' : 'Novo Cliente'}
           </h4>
@@ -236,7 +238,7 @@ const ClientsManager = () => {
                   id="nome"
                   value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  className="bg-gray-800 border-gray-600"
+                  className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600'}`}
                   placeholder="Nome completo"
                   required
                 />
@@ -247,7 +249,7 @@ const ClientsManager = () => {
                   id="telefone"
                   value={formData.telefone}
                   onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                  className="bg-gray-800 border-gray-600"
+                  className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600'}`}
                   placeholder="(11) 99999-9999"
                 />
               </div>
@@ -260,19 +262,8 @@ const ClientsManager = () => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="bg-gray-800 border-gray-600"
+                className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600'}`}
                 placeholder="cliente@email.com"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="observacoes">Observações</Label>
-              <Input
-                id="observacoes"
-                value={formData.observacoes}
-                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                className="bg-gray-800 border-gray-600"
-                placeholder="Observações sobre o cliente..."
               />
             </div>
 
@@ -281,7 +272,7 @@ const ClientsManager = () => {
                 type="button"
                 variant="outline"
                 onClick={() => setShowForm(false)}
-                className="border-gray-600"
+                className={`${isLightTheme ? 'border-gold-800' : 'border-gray-600'}`} 
               >
                 Cancelar
               </Button>
@@ -299,11 +290,11 @@ const ClientsManager = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {clients.map((client) => (
-          <Card key={client.id} className="bg-gray-900 border-gray-700 p-6">
+          <Card key={client.id} className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'} p-6`}>
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center">
-                <User className="h-5 w-5 text-gold-400 mr-2" />
-                <h4 className="text-lg text-white font-semibold">{client.nome}</h4>
+                <User className={`${isLightTheme ? 'text-gold-700' : 'text-gold-400'} h-5 w-5 mr-2`} />
+                <h4 className={`${isLightTheme ? 'text-black' : 'text-white'} text-lg font-semibold`}>{client.nome}</h4>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -327,19 +318,16 @@ const ClientsManager = () => {
             
             <div className="space-y-2">
               {client.telefone && (
-                <div className="flex items-center text-gray-400">
-                  <Phone className="h-4 w-4 mr-2" />
+                <div className={`${isLightTheme ? 'text-black' : 'text-gray-400'} flex items-center`}>
+                  <Phone className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-4 w-4 mr-2`} />               
                   <span>{client.telefone}</span>
                 </div>
               )}
               {client.email && (
-                <div className="flex items-center text-gray-400">
-                  <Mail className="h-4 w-4 mr-2" />
+                <div className={`${isLightTheme ? 'text-black' : 'text-gray-400'} flex items-center`}>                  
+                  <Mail className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-4 w-4 mr-2`} />
                   <span>{client.email}</span>
                 </div>
-              )}
-              {client.observacoes && (
-                <p className="text-gray-400 text-sm mt-3">{client.observacoes}</p>
               )}
             </div>
           </Card>
@@ -347,10 +335,10 @@ const ClientsManager = () => {
       </div>
 
       {clients.length === 0 && (
-        <Card className="bg-gray-900 border-gray-700 p-8 text-center">
-          <User className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-          <h4 className="text-lg  text-white font-semibold mb-2">Nenhum cliente cadastrado</h4>
-          <p className="text-gray-400 mb-4">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'} p-8 text-center`}>
+          <User className={`${isLightTheme ? 'text-black' : 'text-white'} h-12 w-12 mx-auto mb-4`} />
+          <h4 className={`${isLightTheme ? 'text-black' : 'text-white'} text-lg font-semibold mb-2`}>Nenhum cliente cadastrado</h4>
+          <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} mb-4`}>  
             Comece adicionando seus primeiros clientes.
           </p>
           <Button

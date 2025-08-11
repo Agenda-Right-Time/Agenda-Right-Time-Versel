@@ -21,6 +21,8 @@ import ClientAuth from '@/components/client/ClientAuth';
 import ClienteForm from '@/components/agendamento/ClienteForm';
 import GlobalPaymentListener from '@/components/GlobalPaymentListener';
 import { Calendar } from 'lucide-react';
+// Importação do provider de tema cliente
+import { GlobalThemeProvider, useTheme } from '@/hooks/useThemeManager';
 
 interface Servico {
   id: string;
@@ -42,13 +44,17 @@ interface Cliente {
   email: string;
 }
 
-const Agendamento = () => {
+// Componente interno que usa o tema
+const AgendamentoContent = () => {
   // TODOS OS HOOKS DEVEM SER DECLARADOS PRIMEIRO
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { empresaSlug, ownerId, loading: slugLoading, error: slugError } = useCompanySlug();
   const { user: loggedUser } = useAuth();
   const { toast } = useToast();
+  
+  // Hook para gerenciar o tema do cliente (agendamento + dashboard)
+  const { isLightTheme } = useTheme();
   
   // Estados
   const [step, setStep] = useState(1);
@@ -200,7 +206,11 @@ const Agendamento = () => {
   // Loading states - aguardar tanto slug quanto auth
   if (slugLoading || authLoading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
+        isLightTheme 
+          ? 'bg-white text-black' // Tema claro - fundo branco com texto escuro
+          : 'bg-black text-white' // Tema escuro - mantém o original
+      }`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-400 mx-auto mb-4"></div>
           <p>Carregando...</p>
@@ -223,7 +233,11 @@ const Agendamento = () => {
   
   if (!isOwnerAccessing && user && clientProfile && hasAccessToThisProfessional === false) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
+        isLightTheme 
+          ? 'bg-white text-black' // Tema claro - fundo branco com texto escuro
+          : 'bg-black text-white' // Tema escuro - mantém o original
+      }`}>
         <div className="text-center max-w-md mx-auto p-6">
           <h1 className="text-2xl font-bold text-red-400 mb-4">Acesso Negado</h1>
           <p className="text-gray-400 mb-4">
@@ -254,7 +268,7 @@ const Agendamento = () => {
     );
   }
   
-  // Se é dashboard do cliente, renderizar ClientDashboard
+  // Se é dashboard do cliente, renderizar ClientDashboard (já tem tema aplicado)
   if (showDashboard) {
     return <ClientDashboard ownerId={finalOwnerId || ''} onNewAppointment={() => navigate(`/${empresaSlug}`)} />;
   }
@@ -876,7 +890,11 @@ const Agendamento = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isLightTheme 
+        ? 'bg-white text-black' // Tema claro - fundo branco com texto escuro
+        : 'bg-black text-white' // Tema escuro - mantém o original
+    }`}>
       {/* Listener GLOBAL - funciona em qualquer tela, incluindo PIX! */}
       <GlobalPaymentListener ownerId={finalOwnerId || ''} />
       
@@ -1071,6 +1089,15 @@ const Agendamento = () => {
         )}
       </div>
     </div>
+  );
+};
+
+// Componente Agendamento com provider de tema cliente
+const Agendamento = () => {
+  return (
+    <GlobalThemeProvider>
+      <AgendamentoContent />
+    </GlobalThemeProvider>
   );
 };
 

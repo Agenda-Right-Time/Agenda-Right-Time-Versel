@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface Service {
   id: string;
@@ -39,6 +40,7 @@ interface AppointmentFormProps {
 const AppointmentForm = ({ services, clients, professionals, onSuccess, onCancel }: AppointmentFormProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { isLightTheme } = useTheme();
 
   const [formData, setFormData] = useState({
     cliente_id: '',
@@ -104,14 +106,14 @@ const AppointmentForm = ({ services, clients, professionals, onSuccess, onCancel
   };
 
   return (
-    <Card className="bg-gray-900 text-gray-400 border-gray-700 p-4 sm:p-6">
-      <h4 className="text-lg text-white sm:text-xl font-semibold mb-4">Novo Agendamento</h4>
+    <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 text-gray-400 border-gray-700'} p-4 sm:p-6`}>
+      <h4 className={`${isLightTheme ? 'text-black' : 'text-white'} text-lg sm:text-xl font-semibold mb-4`}>Novo Agendamento</h4>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 gap-4">
           <div>
             <Label>Cliente *</Label>
             <Select value={formData.cliente_id} onValueChange={(value) => setFormData({ ...formData, cliente_id: value })}>
-              <SelectTrigger className="bg-gray-800 border-gray-600">
+              <SelectTrigger className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600'}`}>
                 <SelectValue placeholder="Selecione um cliente" />
               </SelectTrigger>
               <SelectContent>
@@ -127,7 +129,7 @@ const AppointmentForm = ({ services, clients, professionals, onSuccess, onCancel
           <div>
             <Label>Profissional *</Label>
             <Select value={formData.profissional_id} onValueChange={(value) => setFormData({ ...formData, profissional_id: value })}>
-              <SelectTrigger className="bg-gray-800 border-gray-600">
+              <SelectTrigger className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600'}`}>
                 <SelectValue placeholder="Selecione um profissional" />
               </SelectTrigger>
               <SelectContent>
@@ -144,7 +146,7 @@ const AppointmentForm = ({ services, clients, professionals, onSuccess, onCancel
           <div>
             <Label>Serviço *</Label>
             <Select value={formData.servico_id} onValueChange={(value) => setFormData({ ...formData, servico_id: value })}>
-              <SelectTrigger className="bg-gray-800 border-gray-600">
+              <SelectTrigger className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600'}`}>
                 <SelectValue placeholder="Selecione um serviço" />
               </SelectTrigger>
               <SelectContent>
@@ -166,7 +168,7 @@ const AppointmentForm = ({ services, clients, professionals, onSuccess, onCancel
               type="date"
               value={formData.data}
               onChange={(e) => setFormData({ ...formData, data: e.target.value })}
-              className="bg-gray-800 border-gray-600"
+              className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600'}`}
               required
             />
           </div>
@@ -178,7 +180,7 @@ const AppointmentForm = ({ services, clients, professionals, onSuccess, onCancel
               type="time"
               value={formData.hora}
               onChange={(e) => setFormData({ ...formData, hora: e.target.value })}
-              className="bg-gray-800 border-gray-600"
+              className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600'}`}
               required
             />
           </div>
@@ -190,7 +192,7 @@ const AppointmentForm = ({ services, clients, professionals, onSuccess, onCancel
             id="observacoes"
             value={formData.observacoes}
             onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-            className="bg-gray-800 border-gray-600"
+            className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600'}`}
             placeholder="Observações sobre o agendamento..."
           />
         </div>
@@ -200,7 +202,7 @@ const AppointmentForm = ({ services, clients, professionals, onSuccess, onCancel
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="border-gray-600 w-full sm:w-auto"
+            className={`${isLightTheme ? 'border-gold-800' : 'border-gray-600'} w-full sm:w-auto`}
           >
             Cancelar
           </Button>

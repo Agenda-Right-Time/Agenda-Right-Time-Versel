@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { DollarSign, Calendar, Wallet, RefreshCw, UserCheck } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface SaldoData {
   saldoDiario: number;
@@ -33,6 +34,7 @@ const SaldoManager = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isLightTheme } = useTheme();
 
   useEffect(() => {
     if (user?.id) {
@@ -241,7 +243,7 @@ const SaldoManager = () => {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h3 className="text-xl sm:text-2xl font-bold">Meu Saldo PIX</h3>
-          <p className="text-gray-400 text-sm">
+          <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-sm`}>
             {selectedProfessional === 'todos' 
               ? 'Transações PIX de todos os profissionais' 
               : `Transações PIX de ${selectedProfessionalName}`
@@ -259,12 +261,12 @@ const SaldoManager = () => {
       </div>
 
       {/* Filtro de Profissionais */}
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>       
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4 items-center">
             <div className="flex items-center gap-2">
-              <UserCheck className="h-5 w-5 text-gold-400" />
-              <span className="text-white font-medium text-sm">Filtrar por Profissional:</span>
+              <UserCheck className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-5 w-5`} />
+              <span className={`${isLightTheme ? 'text-gray-500' : 'text-white'} font-medium text-sm`}>Filtrar por Profissional:</span>              
             </div>
             <Select value={selectedProfessional} onValueChange={setSelectedProfessional}>
               <SelectTrigger className="bg-white border-gray-300 text-black w-full sm:w-64">
@@ -292,77 +294,77 @@ const SaldoManager = () => {
       {/* Cards de Saldo */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Saldo Diário */}
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>         
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-400">
+            <CardTitle className={`${isLightTheme ? 'text-black' : 'text-gray-400'} text-sm font-medium`}>
               Saldo PIX de Hoje
             </CardTitle>
-            <Calendar className="h-4 w-4 text-gold-400" />
+            <Calendar className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-4 w-4`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gold-400">
+            <div className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} text-2xl font-bold`}>
               R$ {saldo.saldoDiario.toFixed(2)}
             </div>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-xs mt-2`}>
               {saldo.transacoesDiarias} transação(ões) PIX hoje
             </p>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-xs mt-2`}>
               {format(new Date(), 'dd \'de\' MMMM \'de\' yyyy', { locale: ptBR })}
             </p>
           </CardContent>
         </Card>
 
         {/* Saldo Mensal */}
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-400">
+            <CardTitle className={`${isLightTheme ? 'text-black' : 'text-gray-400'} text-sm font-medium`}>
               Saldo PIX do Mês
             </CardTitle>
-            <Wallet className="h-4 w-4 text-gold-400" />
+            <Wallet className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-4 w-4`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gold-400">
+            <div className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} text-2xl font-bold`}>
               R$ {saldo.saldoMensal.toFixed(2)}
             </div>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-xs mt-2`}>             
               {saldo.transacoesMensais} transação(ões) PIX este mês
             </p>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-xs mt-2`}>
               {format(new Date(), 'MMMM \'de\' yyyy', { locale: ptBR })}
             </p>
           </CardContent>
         </Card>
 
         {/* Ticket Médio Diário */}
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-400">
+            <CardTitle className={`${isLightTheme ? 'text-black' : 'text-gray-400'} text-sm font-medium`}>
               Ticket Médio PIX Diário
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-gold-400" />
+            <DollarSign className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-4 w-4`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-400">
+            <div className={`${isLightTheme ? 'text-green-600' : 'text-green-400'} text-2xl font-bold`}>
               R$ {saldo.transacoesDiarias > 0 ? (saldo.saldoDiario / saldo.transacoesDiarias).toFixed(2) : '0.00'}
             </div>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-xs mt-2`}>
               Valor médio por transação PIX hoje
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-400">
+            <CardTitle className={`${isLightTheme ? 'text-black' : 'text-gray-400'} text-sm font-medium`}>
               Ticket Médio PIX Mensal
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-gold-400" />
+            <DollarSign className={`${isLightTheme ? 'text-gold-700' : 'text-gold-500'} h-4 w-4`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-400">
+            <div className={`${isLightTheme ? 'text-green-600' : 'text-green-400'} text-2xl font-bold`}>
               R$ {saldo.transacoesMensais > 0 ? (saldo.saldoMensal / saldo.transacoesMensais).toFixed(2) : '0.00'}
             </div>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-xs mt-2`}>
               Valor médio por transação PIX este mês
             </p>
           </CardContent>

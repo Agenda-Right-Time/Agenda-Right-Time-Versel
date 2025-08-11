@@ -38,7 +38,7 @@ const HeroSection = ({ onStartTrial, onLogin }: HeroSectionProps) => {
 
   const handlePaymentSuccess = () => {
     navigate('/dashboard');
-  };
+  }
 
   return (
     <section className="relative min-h-[60vh] sm:min-h-[70vh] flex items-center justify-center px-4 pt-6 sm:pt-8 overflow-visible">
@@ -50,7 +50,7 @@ const HeroSection = ({ onStartTrial, onLogin }: HeroSectionProps) => {
           <Crown className="h-12 w-12 sm:h-16 sm:w-16 text-gold-500 mx-auto mb-6 sm:mb-8" />
         </div>
         
-        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 text-transparent bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text [-webkit-background-clip:text] [background-clip:text] relative z-50 overflow-visible pb-2 sm:pb-4 leading-tight">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 text-transparent bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text [-webkit-background-clip:text] [bg-clip:text] relative z-50 overflow-visible pb-2 sm:pb-4 leading-tight">
           Agenda Right Time
         </h1>
         

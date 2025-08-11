@@ -12,6 +12,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+// Importação do hook de tema e componente de alternância
+import { useTheme } from '@/hooks/useThemeManager';
+import ThemeToggle from '@/components/ui/theme-toggle';
 
 interface DashboardHeaderProps {
   onViewPublicBooking: () => void;
@@ -25,6 +28,9 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
   const { toast } = useToast();
   const { businessData } = useBusinessData(user?.id || null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Hook para gerenciar o tema do dashboard profissional
+  const { isLightTheme, toggleTheme } = useTheme();
 
   const menuItems = [
     { id: 'agendamentos', label: 'Agendamentos' },
@@ -97,7 +103,11 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
   };
 
   return (
-    <header className="bg-gray-900 border-b border-gray-800 p-4">
+    <header className={`border-b p-4 transition-colors duration-300 ${
+      isLightTheme 
+        ? 'bg-white border-gold-500' // Tema claro - fundo branco com borda dourada
+        : 'bg-gray-900 border-gray-800' // Tema escuro - mantém o original
+    }`}>
       <div className="container mx-auto">
         {/* Header principal */}
         <div className="flex items-center justify-between mb-4">
@@ -109,7 +119,11 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
                   <Menu className="h-4 w-4 text-gray-900" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="bg-white border-gray-300 text-black w-80">
+              <SheetContent side="left" className={`w-80 transition-colors duration-300 ${
+                isLightTheme 
+                  ? 'bg-white border-gold-500 text-black' // Tema claro - fundo branco com borda dourada
+                  : 'bg-white border-gray-300 text-black' // Tema escuro - mantém branco como estava
+              }`}>
                 <SheetHeader className="border-b border-gray-300 pb-4">
                   <SheetTitle className="text-left text-black flex items-center space-x-3">
                     <Crown className="h-6 w-6 text-gold-500" />
@@ -167,6 +181,14 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
                     </div>
                   </div>
 
+                  {/* Controle de tema */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-600 mb-3">TEMA</h3>
+                    <div className="flex items-center justify-between">
+                      <ThemeToggle isLightTheme={isLightTheme} onToggle={toggleTheme} />
+                    </div>
+                  </div>
+
                   {/* User info e logout */}
                   <div className="border-t border-gray-300 pt-4">
                     <div className="text-sm text-gray-600 mb-3 truncate">{user?.email}</div>
@@ -199,9 +221,16 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
             </h1>
           </div>
 
-          {/* Desktop - user info e logout */}
+          {/* Desktop - controle de tema, user info e logout */}
           <div className="hidden lg:flex items-center space-x-4">
-            <span className="text-gray-300 text-sm truncate">{user?.email}</span>
+            {/* Controle de tema */}
+            <div className="flex items-center space-x-2">
+              <ThemeToggle isLightTheme={isLightTheme} onToggle={toggleTheme} />
+            </div>
+            
+            <span className={`text-sm truncate ${isLightTheme ? 'text-gray-700' : 'text-gray-300'}`}>
+              {user?.email}
+            </span>
             <Button 
               variant="outline" 
               size="sm" 
@@ -225,7 +254,9 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
                 className={`text-xs ${
                   activeTab === item.id 
                     ? 'bg-gold-500 text-black hover:bg-gold-600' 
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    : isLightTheme 
+                      ? 'text-gray-700 hover:bg-gray-100 hover:text-black' // Tema claro - texto escuro
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white' // Tema escuro - mantém original
                 }`}
                 onClick={() => handleTabClick(item.id)}
               >
@@ -267,7 +298,9 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
                 className={`text-xs whitespace-nowrap ${
                   activeTab === item.id 
                     ? 'bg-gold-500 text-black hover:bg-gold-600' 
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    : isLightTheme 
+                      ? 'text-gray-700 hover:bg-gray-100 hover:text-black' // Tema claro - texto escuro
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white' // Tema escuro - mantém original
                 }`}
                 onClick={() => handleTabClick(item.id)}
               >
@@ -279,6 +312,9 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
 
         {/* Botões para tablet */}
         <div className="hidden md:flex lg:hidden items-center justify-center space-x-2 mt-2">
+          {/* Controle de tema para tablet */}
+          <ThemeToggle isLightTheme={isLightTheme} onToggle={toggleTheme} />
+          
           <Button 
             variant="outline" 
             size="sm" 

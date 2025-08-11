@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, Edit, Trash2, User } from 'lucide-react';
 import ImageUpload from '@/components/ui/image-upload';
+import { useTheme } from '@/hooks/useThemeManager';
 
 interface Profissional {
   id: string;
@@ -33,6 +34,7 @@ const ProfissionaisManager = () => {
   });
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isLightTheme } = useTheme();
 
   useEffect(() => {
     if (user) {
@@ -226,7 +228,10 @@ const ProfissionaisManager = () => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-bold text-white">Profissionais</h3>
-          <p className="text-gray-400">Gerencie sua equipe de profissionais</p>
+          <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'}`}>Gerencie sua equipe de profissionais</p>
+
+         
+
         </div>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -239,7 +244,7 @@ const ProfissionaisManager = () => {
               Novo Profissional
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md">
+          <DialogContent className={`${isLightTheme ? 'bg-gray-300 border-gold-800 text-black' : 'bg-gray-900 border-gray-700 text-white'} max-w-md`}>
             <DialogHeader>
               <DialogTitle>
                 {editingProfissional ? 'Editar Profissional' : 'Novo Profissional'}
@@ -262,7 +267,7 @@ const ProfissionaisManager = () => {
                   id="nome"
                   value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  className="bg-gray-800 border-gray-600"
+                  className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600'}`}
                   placeholder="Nome do profissional"
                   required
                 />
@@ -274,7 +279,7 @@ const ProfissionaisManager = () => {
                   id="especialidade"
                   value={formData.especialidade}
                   onChange={(e) => setFormData({ ...formData, especialidade: e.target.value })}
-                  className="bg-gray-800 border-gray-600"
+                  className={`${isLightTheme ? 'bg-gray-200 border-gold-800' : 'bg-gray-800 border-gray-600'}`}
                   placeholder="Especialidade do profissional"
                 />
               </div>
@@ -287,7 +292,7 @@ const ProfissionaisManager = () => {
                   type="button" 
                   variant="outline" 
                   onClick={() => setDialogOpen(false)}
-                  className="border-gray-600 text-gray-900"
+                  className={`${isLightTheme ? 'border-gold-800 text-gray-900' : 'border-gray-600 text-gray-900'}`}
                 >
                   Cancelar
                 </Button>
@@ -298,11 +303,13 @@ const ProfissionaisManager = () => {
       </div>
 
       {profissionais.length === 0 ? (
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
           <CardContent className="text-center py-8">
-            <User className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-300 mb-2">Nenhum profissional cadastrado</h3>
-            <p className="text-gray-500 mb-4">Cadastre profissionais para que os clientes possam escolhê-los nos agendamentos.</p>
+            <User className={`${isLightTheme ? 'text-black' : 'text-white'} h-12 w-12 mx-auto mb-4`} />     
+            <h3 className={`${isLightTheme ? 'text-black' : 'text-white'} text-lg font-semibold mb-2`}>Nenhum profissional cadastrado</h3>
+
+            
+            <p className={`${isLightTheme ? 'text-gray-500' : 'text-gray-400'} text-sm mb-4`}>Cadastre profissionais para que os clientes possam escolhê-los nos agendamentos.</p>
             <Button 
               onClick={handleNewProfissional}
               className="bg-gold-gradient text-black font-semibold hover:opacity-90"
@@ -315,10 +322,13 @@ const ProfissionaisManager = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {profissionais.map((profissional) => (
-            <Card key={profissional.id} className="bg-gray-900 border-gray-700">
+            <Card key={profissional.id} className={`${isLightTheme ? 'bg-gray-300 border-gold-800' : 'bg-gray-900 border-gray-700'}`}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-white text-lg">{profissional.nome}</CardTitle>
+                  <CardTitle className={`${isLightTheme ? 'text-black' : 'text-white'} text-lg`}>{profissional.nome}</CardTitle>
+
+               
+
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={profissional.ativo} className="border-gray-700"
@@ -355,7 +365,7 @@ const ProfissionaisManager = () => {
                   )}
 
                   {profissional.especialidade && (
-                    <p className="text-gray-400 text-sm text-center">{profissional.especialidade}</p>
+                    <p className={`${isLightTheme ? 'text-black' : 'text-gray-400'} text-sm text-center`}>{profissional.especialidade}</p>
                   )}
 
                   <div className="flex gap-2 mt-4">
