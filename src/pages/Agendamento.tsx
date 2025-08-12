@@ -24,6 +24,7 @@ import { Calendar } from 'lucide-react';
 // Importação do provider de tema cliente
 import { GlobalThemeProvider, useTheme } from '@/hooks/useThemeManager';
 
+
 interface Servico {
   id: string;
   nome: string;
@@ -921,13 +922,16 @@ const AgendamentoContent = () => {
         
         {/* Mostrar mensagem quando não há dados configurados */}
         {isValidUUID(finalOwnerId) && (servicos.length === 0 || profissionais.length === 0) && (
-          <div className="mb-6 bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
+          <div className={`${isLightTheme ? 'bg-yellow-900/10 border-gold-800 text-black' : 'bg-yellow-900/20 border-yellow-500/30 text-gray-300'} mb-6 border rounded-lg p-4`}>
+
+
+
             <div className="flex items-center gap-2">
               <span className="text-yellow-400 text-sm font-medium">
                 📋 CONFIGURAÇÕES PENDENTES
               </span>
             </div>
-            <p className="text-gray-300 text-sm mt-1">
+            <p className="text-sm mt-1">
               Este estabelecimento ainda não configurou serviços ou profissionais. Entre em contato para mais informações.
             </p>
           </div>

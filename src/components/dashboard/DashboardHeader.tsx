@@ -108,12 +108,12 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
         ? 'bg-white border-gold-500' // Tema claro - fundo branco com borda dourada
         : 'bg-gray-900 border-gray-800' // Tema escuro - mantém o original
     }`}>
-      <div className="container mx-auto">
+      <div className="container mx-5">
         {/* Header principal */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-1  mt-1 md:mb-4">
           {/* Menu mobile - Sheet centralizado */}
           <div className="flex items-center space-x-3 lg:hidden">
-            <div className="absolute left-4">
+            <div className="absolute left-5">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm" className="border-gray-600 text-gray-900 bg-white hover:bg-gray-100">
@@ -125,7 +125,7 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
                     ? 'bg-white border-gold-500 text-black' // Tema claro - fundo branco com borda dourada
                     : 'bg-white border-gray-300 text-black' // Tema escuro - mantém branco como estava
                 }`}>
-                  <SheetHeader className="border-b border-gray-300 pb-4">
+                  <SheetHeader className="border-b border-gray-300 pb-4 mb-15">
                     <SheetTitle className="text-left text-black flex items-center space-x-3">
                       <Crown className="h-6 w-6 text-gold-500" />
                       <span className="text-lg font-bold bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent">
@@ -135,7 +135,7 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
                   </SheetHeader>
 
                   <div className="flex-1 h-[calc(100vh-100px)] overflow-y-auto scrollbar-hide bg-background">
-                    <div className="mt-6 space-y-6 p-4">
+                    <div className="space-y-6 p-4">
                       {/* Abas do menu */}
                       <div></div>
 
@@ -193,11 +193,11 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
                     </div>
 
                     {/* User info e logout */}
-                    <div className="border-t border-gray-300 pt-4">
+                    <div className="border-t border-gray-300 pt-4 mt-3">
                       <div className="text-sm text-gray-600 mb-3 truncate">{user?.email}</div>
                       <Button 
                         variant="outline" 
-                        className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                        className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white mb-2"
                         onClick={handleSignOut}
                       >
                         <LogOut className="h-4 w-4 mr-2" />
