@@ -108,7 +108,7 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
         ? 'bg-white border-gold-500' // Tema claro - fundo branco com borda dourada
         : 'bg-gray-900 border-gray-800' // Tema escuro - mantém o original
     }`}>
-      <div className="container mx-5">
+      <div className="container mx-auto">
         {/* Header principal */}
         <div className="flex items-center justify-between mb-1  mt-1 md:mb-4">
           {/* Menu mobile - Sheet centralizado */}
@@ -134,7 +134,7 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
                     </SheetTitle>
                   </SheetHeader>
 
-                  <div className="flex-1 h-[calc(100vh-100px)] overflow-y-auto scrollbar-hide bg-background">
+                  <div className="flex flex-col overflow-y-auto scrollbar-hide bg-background h-full">
                     <div className="space-y-6 p-4">
                       {/* Abas do menu */}
                       <div></div>
@@ -197,7 +197,7 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
                       <div className="text-sm text-gray-600 mb-3 truncate">{user?.email}</div>
                       <Button 
                         variant="outline" 
-                        className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white mb-2"
+                        className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white mb-11"
                         onClick={handleSignOut}
                       >
                         <LogOut className="h-4 w-4 mr-2" />
