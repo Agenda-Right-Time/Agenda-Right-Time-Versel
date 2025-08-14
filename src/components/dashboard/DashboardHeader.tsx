@@ -110,7 +110,7 @@ const DashboardHeader = ({ onViewPublicBooking, activeTab, setActiveTab }: Dashb
     }`}>
       <div className="container mx-auto">
         {/* Header principal */}
-        <div className="flex items-center justify-between mb-1  mt-1 md:mb-4">
+        <div className="flex items-center justify-between mb-1 m-4  mt-1 md:mb-4">
           {/* Menu mobile - Sheet centralizado */}
           <div className="flex items-center space-x-3 lg:hidden">
             <div className="absolute left-5">
